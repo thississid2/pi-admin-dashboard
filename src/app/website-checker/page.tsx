@@ -187,7 +187,7 @@ Disclaimer: This is an automated check and not a guarantee of legitimacy.
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="https://example.com"
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pi-dark focus:border-transparent"
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pi-dark focus:border-transparent bg-white text-gray-900 placeholder-gray-500"
                   required
                 />
                 <button
