@@ -15,12 +15,17 @@ import {
   Filter,
 } from "@/components/icons";
 
-// Format date consistently for both server and client
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
+// Format date consistently for both server and client to avoid hydration errors
+const formatDate = (dateString: string, isClient: boolean = true) => {
+  if (!isClient) {
+    // Return a placeholder for server-side rendering
+    return "Loading...";
+  }
+  // Parse the date in UTC to avoid timezone issues
+  const date = new Date(dateString + "T00:00:00.000Z");
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
   return `${month}/${day}/${year}`;
 };
 
@@ -316,7 +321,7 @@ export default function AdminDashboard() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(merchant.submittedAt)}
+                      {formatDate(merchant.submittedAt, isClient)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex gap-2">
@@ -326,9 +331,6 @@ export default function AdminDashboard() {
                         >
                           View Details
                         </Link>
-                        <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                          Documents
-                        </button>
                       </div>
                     </td>
                   </tr>

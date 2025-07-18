@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -15,12 +15,17 @@ import {
   Calendar,
 } from "@/components/icons";
 
-// Format date consistently for both server and client
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+// Format date consistently for both server and client to avoid hydration errors
+const formatDate = (dateString: string, isClient: boolean = true) => {
+  if (!isClient) {
+    // Return a placeholder for server-side rendering
+    return "Loading...";
+  }
+  // Parse the date in UTC to avoid timezone issues
+  const date = new Date(dateString + "T00:00:00.000Z");
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
   return `${month}/${day}/${year}`;
 };
 
@@ -109,6 +114,12 @@ export default function MerchantDetail({ params }: { params: { id: string } }) {
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(
     null
   );
+  const [isClient, setIsClient] = useState(false);
+
+  // Fix hydration issues
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const formatSize = (bytes: number) => {
     if (bytes > 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
@@ -266,7 +277,7 @@ export default function MerchantDetail({ params }: { params: { id: string } }) {
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-gray-400" />
                     <p className="text-gray-900">
-                      {new Date(merchant.submittedAt).toLocaleDateString()}
+                      {formatDate(merchant.submittedAt, isClient)}
                     </p>
                   </div>
                 </div>
@@ -375,7 +386,7 @@ export default function MerchantDetail({ params }: { params: { id: string } }) {
                         <p className="text-sm text-gray-600">{doc.name}</p>
                         <p className="text-xs text-gray-500">
                           {formatSize(doc.size)} •{" "}
-                          {new Date(doc.uploadedAt).toLocaleDateString()}
+                          {formatDate(doc.uploadedAt, isClient)}
                         </p>
                       </div>
                       <span
