@@ -56,18 +56,18 @@ export default function WebsiteChecker() {
         .replace(/^https?:\/\//, "")
         .replace(/^www\./, "")
         .split("/")[0];
-      
+
       // Call the enhanced legitimacy checker API
-      const response = await fetch('/api/website-check', {
-        method: 'POST',
+      const response = await fetch("/api/website-check", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ url: domain }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to analyze website');
+        throw new Error("Failed to analyze website");
       }
 
       const reportData = await response.json();
@@ -255,34 +255,55 @@ Disclaimer: This is an automated check and not a guarantee of legitimacy.
               {report.trust_score !== undefined && (
                 <div className="mb-6 p-6 rounded-lg border-2 border-gray-200 bg-gradient-to-r from-gray-50 to-white">
                   <div className="text-center">
-                    <h3 className="text-lg font-semibold text-pi-dark mb-2">Overall Trust Score</h3>
+                    <h3 className="text-lg font-semibold text-pi-dark mb-2">
+                      Overall Trust Score
+                    </h3>
                     <div className="flex items-center justify-center gap-4 mb-4">
-                      <div className={`text-4xl font-bold ${
-                        report.trust_score >= 85 ? 'text-green-600' :
-                        report.trust_score >= 70 ? 'text-blue-600' :
-                        report.trust_score >= 50 ? 'text-yellow-600' :
-                        report.trust_score >= 30 ? 'text-orange-600' : 'text-red-600'
-                      }`}>
+                      <div
+                        className={`text-4xl font-bold ${
+                          report.trust_score >= 85
+                            ? "text-green-600"
+                            : report.trust_score >= 70
+                            ? "text-blue-600"
+                            : report.trust_score >= 50
+                            ? "text-yellow-600"
+                            : report.trust_score >= 30
+                            ? "text-orange-600"
+                            : "text-red-600"
+                        }`}
+                      >
                         {report.trust_score}%
                       </div>
                       <div className="text-center">
-                        <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          report.trust_score >= 85 ? 'bg-green-100 text-green-800' :
-                          report.trust_score >= 70 ? 'bg-blue-100 text-blue-800' :
-                          report.trust_score >= 50 ? 'bg-yellow-100 text-yellow-800' :
-                          report.trust_score >= 30 ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'
-                        }`}>
+                        <div
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            report.trust_score >= 85
+                              ? "bg-green-100 text-green-800"
+                              : report.trust_score >= 70
+                              ? "bg-blue-100 text-blue-800"
+                              : report.trust_score >= 50
+                              ? "bg-yellow-100 text-yellow-800"
+                              : report.trust_score >= 30
+                              ? "bg-orange-100 text-orange-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
                           {report.trust_level}
                         </div>
                       </div>
                     </div>
                     {report.recommendation && (
-                      <div className={`text-sm p-3 rounded-lg ${
-                        report.recommendation.includes('LOW RISK') ? 'bg-green-50 text-green-800 border border-green-200' :
-                        report.recommendation.includes('MODERATE RISK') ? 'bg-blue-50 text-blue-800 border border-blue-200' :
-                        report.recommendation.includes('ELEVATED RISK') ? 'bg-yellow-50 text-yellow-800 border border-yellow-200' :
-                        'bg-red-50 text-red-800 border border-red-200'
-                      }`}>
+                      <div
+                        className={`text-sm p-3 rounded-lg ${
+                          report.recommendation.includes("LOW RISK")
+                            ? "bg-green-50 text-green-800 border border-green-200"
+                            : report.recommendation.includes("MODERATE RISK")
+                            ? "bg-blue-50 text-blue-800 border border-blue-200"
+                            : report.recommendation.includes("ELEVATED RISK")
+                            ? "bg-yellow-50 text-yellow-800 border border-yellow-200"
+                            : "bg-red-50 text-red-800 border border-red-200"
+                        }`}
+                      >
                         <strong>Recommendation:</strong> {report.recommendation}
                       </div>
                     )}
