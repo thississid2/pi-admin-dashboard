@@ -16,12 +16,24 @@ interface CheckResult {
   check: string;
   result: string;
   status: "success" | "warning" | "error" | "info";
+  score?: number;
+}
+
+interface CategoryScore {
+  category: string;
+  score: number;
+  max_score: number;
 }
 
 interface WebsiteReport {
   domain: string;
   timestamp: string;
+  trust_score?: number;
+  trust_level?: string;
+  overall_status?: string;
+  category_scores?: CategoryScore[];
   results: CheckResult[];
+  recommendation?: string;
 }
 
 export default function WebsiteChecker() {
@@ -29,37 +41,6 @@ export default function WebsiteChecker() {
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<WebsiteReport | null>(null);
   const [error, setError] = useState("");
-
-  const mockCheck = async (domain: string): Promise<WebsiteReport> => {
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    return {
-      domain,
-      timestamp: new Date().toISOString(),
-      results: [
-        { check: "HTTPS Connection", result: "Successful", status: "success" },
-        { check: "HTTP -> HTTPS Redirect", result: "Yes", status: "success" },
-        { check: "Contact Page", result: "Found", status: "success" },
-        { check: "Privacy Page", result: "Found", status: "success" },
-        { check: "Terms Page", result: "Found", status: "success" },
-        { check: "Refund Page", result: "Not Found", status: "warning" },
-        { check: "About Page", result: "Found", status: "success" },
-        {
-          check: "Domain Status",
-          result: "clientTransferProhibited",
-          status: "success",
-        },
-        { check: "Creation Date", result: "2020-03-15", status: "success" },
-        {
-          check: "Domain Age",
-          result: "1,765 days (approx. 4 years)",
-          status: "success",
-        },
-        { check: "Blacklist Status", result: "Clean", status: "success" },
-      ],
-    };
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +56,21 @@ export default function WebsiteChecker() {
         .replace(/^https?:\/\//, "")
         .replace(/^www\./, "")
         .split("/")[0];
-      const reportData = await mockCheck(domain);
+      
+      // Call the enhanced legitimacy checker API
+      const response = await fetch('/api/website-check', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: domain }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to analyze website');
+      }
+
+      const reportData = await response.json();
       setReport(reportData);
     } catch (err) {
       setError("Failed to analyze website. Please try again.");
@@ -256,6 +251,45 @@ Disclaimer: This is an automated check and not a guarantee of legitimacy.
             </div>
 
             <div className="p-6">
+              {/* Trust Score Display */}
+              {report.trust_score !== undefined && (
+                <div className="mb-6 p-6 rounded-lg border-2 border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+                  <div className="text-center">
+                    <h3 className="text-lg font-semibold text-pi-dark mb-2">Overall Trust Score</h3>
+                    <div className="flex items-center justify-center gap-4 mb-4">
+                      <div className={`text-4xl font-bold ${
+                        report.trust_score >= 85 ? 'text-green-600' :
+                        report.trust_score >= 70 ? 'text-blue-600' :
+                        report.trust_score >= 50 ? 'text-yellow-600' :
+                        report.trust_score >= 30 ? 'text-orange-600' : 'text-red-600'
+                      }`}>
+                        {report.trust_score}%
+                      </div>
+                      <div className="text-center">
+                        <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          report.trust_score >= 85 ? 'bg-green-100 text-green-800' :
+                          report.trust_score >= 70 ? 'bg-blue-100 text-blue-800' :
+                          report.trust_score >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                          report.trust_score >= 30 ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {report.trust_level}
+                        </div>
+                      </div>
+                    </div>
+                    {report.recommendation && (
+                      <div className={`text-sm p-3 rounded-lg ${
+                        report.recommendation.includes('LOW RISK') ? 'bg-green-50 text-green-800 border border-green-200' :
+                        report.recommendation.includes('MODERATE RISK') ? 'bg-blue-50 text-blue-800 border border-blue-200' :
+                        report.recommendation.includes('ELEVATED RISK') ? 'bg-yellow-50 text-yellow-800 border border-yellow-200' :
+                        'bg-red-50 text-red-800 border border-red-200'
+                      }`}>
+                        <strong>Recommendation:</strong> {report.recommendation}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="grid gap-4">
                 {report.results.map((result, index) => (
                   <div

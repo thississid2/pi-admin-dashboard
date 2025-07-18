@@ -1,31 +1,115 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { spawn } from 'child_process';
+import path from 'path';
 
-// Mock website analysis function
+// Enhanced website analysis using Python script
 async function analyzeWebsite(url: string) {
-  // Simulate analysis delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  const domain = url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
-  
-  // Mock analysis results
-  const results = [
-    { check: 'HTTPS Connection', result: 'Successful', status: 'success' },
-    { check: 'HTTP -> HTTPS Redirect', result: 'Yes', status: 'success' },
-    { check: 'Contact Page', result: 'Found', status: 'success' },
-    { check: 'Privacy Page', result: 'Found', status: 'success' },
-    { check: 'Terms Page', result: 'Found', status: 'success' },
-    { check: 'Refund Page', result: Math.random() > 0.5 ? 'Found' : 'Not Found', status: Math.random() > 0.5 ? 'success' : 'warning' },
-    { check: 'About Page', result: 'Found', status: 'success' },
-    { check: 'Domain Status', result: 'clientTransferProhibited', status: 'success' },
-    { check: 'Creation Date', result: '2020-03-15', status: 'success' },
-    { check: 'Domain Age', result: '1,765 days (approx. 4 years)', status: 'success' },
-    { check: 'Blacklist Status', result: 'Clean', status: 'success' },
-  ];
+  return new Promise((resolve, reject) => {
+    const scriptPath = path.join(process.cwd(), 'scripts', 'legit_checker_api_simple.py');
+    
+    // Execute Python script
+    const pythonProcess = spawn('python', [scriptPath, url], {
+      cwd: process.cwd(),
+      stdio: 'pipe'
+    });
 
+    let outputData = '';
+    let errorData = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      outputData += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      errorData += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code === 0) {
+        try {
+          // Parse JSON output from Python script
+          const rawResult = JSON.parse(outputData);
+          
+          // Transform the enhanced result into the format expected by frontend
+          const transformedResult = transformPythonResult(rawResult);
+          resolve(transformedResult);
+        } catch (error) {
+          console.error('Failed to parse Python output:', outputData);
+          reject(new Error('Failed to parse analysis results'));
+        }
+      } else {
+        console.error('Python script error:', errorData);
+        reject(new Error(`Analysis failed with code ${code}: ${errorData}`));
+      }
+    });
+
+    pythonProcess.on('error', (error) => {
+      console.error('Failed to start Python process:', error);
+      reject(new Error('Failed to start analysis process'));
+    });
+  });
+}
+
+// Transform Python script output to frontend-compatible format
+function transformPythonResult(pythonResult: any) {
+  // The Python script returns detailed results in a different format
+  // We need to extract individual check results from the comprehensive analysis
+  const results: Array<{check: string, result: string, status: string, score?: number}> = [];
+  
+  // Transform category scores into individual check results
+  if (pythonResult.category_scores) {
+    pythonResult.category_scores.forEach((category: any) => {
+      const percentage = category.max_score > 0 ? 
+        Math.round((category.score / category.max_score) * 100) : 0;
+      
+      let status = 'success';
+      if (percentage < 50) status = 'error';
+      else if (percentage < 80) status = 'warning';
+      
+      results.push({
+        check: category.category,
+        result: `${category.score}/${category.max_score} (${percentage}%)`,
+        status: status,
+        score: category.score
+      });
+    });
+  }
+  
+  // Add overall trust score as a check result
+  if (pythonResult.trust_score !== undefined) {
+    let status = 'success';
+    if (pythonResult.trust_score < 50) status = 'error';
+    else if (pythonResult.trust_score < 70) status = 'warning';
+    
+    results.push({
+      check: 'Overall Trust Score',
+      result: `${pythonResult.trust_score}% (${pythonResult.trust_level})`,
+      status: status,
+      score: pythonResult.trust_score
+    });
+  }
+  
+  // Add recommendation as a check result
+  if (pythonResult.recommendation) {
+    const isLowRisk = pythonResult.recommendation.includes('LOW RISK');
+    const isModerate = pythonResult.recommendation.includes('MODERATE RISK');
+    
+    results.push({
+      check: 'Onboarding Recommendation',
+      result: pythonResult.recommendation,
+      status: isLowRisk ? 'success' : isModerate ? 'warning' : 'error'
+    });
+  }
+  
   return {
-    domain,
-    timestamp: new Date().toISOString(),
-    results
+    domain: pythonResult.domain,
+    timestamp: pythonResult.timestamp,
+    trust_score: pythonResult.trust_score,
+    trust_level: pythonResult.trust_level,
+    overall_status: pythonResult.overall_status,
+    category_scores: pythonResult.category_scores,
+    results: results,
+    recommendation: pythonResult.recommendation
   };
 }
 
