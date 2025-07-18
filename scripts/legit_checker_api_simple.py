@@ -37,13 +37,24 @@ DNSBL_SERVERS = [
     "cbl.abuseat.org", "pbl.spamhaus.org", "sbl.spamhaus.org"
 ]
 
-# Trust indicators
+# Trust indicators - updated for better platform recognition
 TRUST_INDICATORS = [
-    "ssl certificate", "business registration", "vat number", "tax id",
-    "physical address", "phone number", "customer service",
-    "social media", "linkedin", "facebook", "twitter",
-    "payment methods", "paypal", "stripe", "visa", "mastercard",
-    "security badges", "norton", "verisign", "trustpilot"
+    # Security & Technical
+    "ssl certificate", "https", "secure", "security", "encrypted", "certificate",
+    # Business legitimacy
+    "business registration", "vat number", "tax id", "company", "corporation", "llc",
+    # Contact & Support
+    "physical address", "phone number", "customer service", "support", "help", "contact",
+    # Social presence
+    "social media", "linkedin", "facebook", "twitter", "instagram", "youtube",
+    # Payment & E-commerce
+    "payment methods", "paypal", "stripe", "visa", "mastercard", "checkout", "cart",
+    # Trust badges & certifications
+    "security badges", "norton", "verisign", "trustpilot", "better business bureau",
+    # Tech platforms & APIs
+    "api", "developer", "documentation", "github", "repository", "open source",
+    # Professional services
+    "terms of service", "privacy policy", "gdpr", "compliance", "legal"
 ]
 
 def get_clean_domain(url: str) -> str:
@@ -67,13 +78,14 @@ def calculate_trust_score(category_scores: List[Dict]) -> Tuple[int, str]:
     
     percentage = (total_score / max_possible * 100) if max_possible > 0 else 0
     
-    if percentage >= 85:
+    # More realistic thresholds
+    if percentage >= 80:
         return int(percentage), "HIGHLY_TRUSTWORTHY"
-    elif percentage >= 70:
+    elif percentage >= 65:
         return int(percentage), "TRUSTWORTHY"
-    elif percentage >= 50:
+    elif percentage >= 45:
         return int(percentage), "MODERATE_RISK"
-    elif percentage >= 30:
+    elif percentage >= 25:
         return int(percentage), "HIGH_RISK"
     else:
         return int(percentage), "VERY_HIGH_RISK"
@@ -110,7 +122,7 @@ def check_ssl_security(domain: str):
                 # Certificate Authority
                 issuer = dict(x[0] for x in cert['issuer'])
                 ca_name = issuer.get('organizationName', 'Unknown')
-                trusted_cas = ['DigiCert', 'Let\'s Encrypt', 'Comodo', 'GeoTrust', 'Symantec']
+                trusted_cas = ['DigiCert', 'Let\'s Encrypt', 'Comodo', 'GeoTrust', 'Symantec', 'Sectigo', 'GlobalSign', 'Entrust', 'Google Trust Services']
                 
                 if any(ca in ca_name for ca in trusted_cas):
                     results.append({"check": "Certificate Authority", "result": ca_name, "status": "success", "score": 5})
@@ -155,15 +167,21 @@ def check_business_pages(domain: str):
             if domain in full_url:
                 urls_to_scan.add(full_url)
         
-        # Trust indicators
+        # Trust indicators - more flexible scoring
         trust_found = sum(1 for indicator in TRUST_INDICATORS if indicator in page_text)
         
-        if trust_found >= 5:
-            results.append({"check": "Trust Indicators", "result": f"Found {trust_found} indicators", "status": "success", "score": 10})
-            total_score += 10
-        elif trust_found >= 2:
-            results.append({"check": "Trust Indicators", "result": f"Found {trust_found} indicators", "status": "warning", "score": 5})
-            total_score += 5
+        if trust_found >= 8:
+            results.append({"check": "Trust Indicators", "result": f"Found {trust_found} indicators", "status": "success", "score": 15})
+            total_score += 15
+        elif trust_found >= 5:
+            results.append({"check": "Trust Indicators", "result": f"Found {trust_found} indicators", "status": "success", "score": 12})
+            total_score += 12
+        elif trust_found >= 3:
+            results.append({"check": "Trust Indicators", "result": f"Found {trust_found} indicators", "status": "warning", "score": 8})
+            total_score += 8
+        elif trust_found >= 1:
+            results.append({"check": "Trust Indicators", "result": f"Found {trust_found} indicators", "status": "warning", "score": 4})
+            total_score += 4
         else:
             results.append({"check": "Trust Indicators", "result": f"Found {trust_found} indicators", "status": "error", "score": 0})
         
@@ -210,7 +228,7 @@ def check_business_pages(domain: str):
     except Exception as e:
         results.append({"check": "Business Content Analysis", "result": f"Error: {str(e)[:50]}", "status": "error", "score": 0})
     
-    return results, total_score, 30
+    return results, total_score, 35
 
 def check_domain_reputation(domain: str):
     """Check domain reputation via WHOIS."""
@@ -247,7 +265,7 @@ def check_domain_reputation(domain: str):
         
         # Registrar
         if w.registrar:
-            trusted_registrars = ['GoDaddy', 'Namecheap', 'Google', 'Amazon', 'Cloudflare']
+            trusted_registrars = ['GoDaddy', 'Namecheap', 'Google', 'Amazon', 'Cloudflare', 'MarkMonitor', 'Network Solutions', 'Tucows', 'Enom', 'Register.com']
             if any(reg.lower() in w.registrar.lower() for reg in trusted_registrars):
                 results.append({"check": "Registrar", "result": w.registrar, "status": "success", "score": 5})
                 total_score += 5
@@ -334,7 +352,7 @@ def analyze_domain(target_url: str):
         'timestamp': datetime.datetime.now().isoformat(),
         'trust_score': trust_score,
         'trust_level': trust_level,
-        'overall_status': 'success' if trust_score >= 70 else 'warning' if trust_score >= 50 else 'error',
+        'overall_status': 'success' if trust_score >= 65 else 'warning' if trust_score >= 45 else 'error',
         'category_scores': category_scores,
         'results': all_results,
         'recommendation': get_recommendation(trust_score)
@@ -342,13 +360,13 @@ def analyze_domain(target_url: str):
 
 def get_recommendation(trust_score: int) -> str:
     """Get onboarding recommendation."""
-    if trust_score >= 85:
+    if trust_score >= 80:
         return "LOW RISK - Recommended for immediate onboarding"
-    elif trust_score >= 70:
+    elif trust_score >= 65:
         return "MODERATE RISK - Approved for onboarding with standard monitoring"
-    elif trust_score >= 50:
+    elif trust_score >= 45:
         return "ELEVATED RISK - Additional verification recommended"
-    elif trust_score >= 30:
+    elif trust_score >= 25:
         return "HIGH RISK - Enhanced due diligence required"
     else:
         return "VERY HIGH RISK - NOT RECOMMENDED for onboarding"
