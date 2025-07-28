@@ -94,12 +94,19 @@ Overall Trust Score: ${report.trust_score}% (${report.trust_level})
 Onboarding Recommendation: ${report.recommendation}
 
 Category Breakdown:
-${report.category_scores?.map(cat => 
-  `${cat.category}: ${cat.score}/${cat.max_score} (${Math.round((cat.score/cat.max_score)*100)}%)`
-).join('\n')}
+${report.category_scores
+  ?.map(
+    (cat) =>
+      `${cat.category}: ${cat.score}/${cat.max_score} (${Math.round(
+        (cat.score / cat.max_score) * 100
+      )}%)`
+  )
+  .join("\n")}
 
 Detailed Results:
-${report.results.map((r) => `${r.check}: ${r.result} ${r.score ? `(Score: ${r.score})` : ''}`).join('\n')}
+${report.results
+  .map((r) => `${r.check}: ${r.result} ${r.score ? `(Score: ${r.score})` : ""}`)
+  .join("\n")}
 
 Report Complete.
 Disclaimer: This is an automated analysis and should be used as part of a comprehensive due diligence process.
@@ -109,7 +116,9 @@ Disclaimer: This is an automated analysis and should be used as part of a compre
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `legitimacy-report-${report.domain}-${new Date().toISOString().split('T')[0]}.txt`;
+    a.download = `legitimacy-report-${report.domain}-${
+      new Date().toISOString().split("T")[0]
+    }.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

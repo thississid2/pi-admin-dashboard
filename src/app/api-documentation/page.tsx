@@ -20,7 +20,7 @@ const apiEndpoints = [
     endpoint: "/api/v1/merchants/verify",
     method: "GET",
     description: "Verify merchant credentials",
-    version: "v1.1.0", 
+    version: "v1.1.0",
     status: "active",
   },
   {
@@ -102,8 +102,12 @@ export default function APIDocumentationPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">API Documentation</h1>
-            <p className="text-gray-600">Comprehensive API reference and guides</p>
+            <h1 className="text-2xl font-bold text-gray-900">
+              API Documentation
+            </h1>
+            <p className="text-gray-600">
+              Comprehensive API reference and guides
+            </p>
           </div>
           <div className="flex space-x-3">
             <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition">
@@ -120,39 +124,47 @@ export default function APIDocumentationPage() {
           <div className="bg-white rounded-xl p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Total Endpoints</p>
-                <p className="text-2xl font-bold text-gray-900">{apiEndpoints.length}</p>
+                <p className="text-gray-600 text-sm font-medium">
+                  Total Endpoints
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {apiEndpoints.length}
+                </p>
               </div>
               <Globe className="w-8 h-8 text-gray-600" />
             </div>
           </div>
-          
+
           <div className="bg-white rounded-xl p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 text-sm font-medium">Active APIs</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {apiEndpoints.filter(api => api.status === "active").length}
+                  {apiEndpoints.filter((api) => api.status === "active").length}
                 </p>
               </div>
               <Code className="w-8 h-8 text-green-600" />
             </div>
           </div>
-          
+
           <div className="bg-white rounded-xl p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Documentation Pages</p>
+                <p className="text-gray-600 text-sm font-medium">
+                  Documentation Pages
+                </p>
                 <p className="text-2xl font-bold text-blue-600">24</p>
               </div>
               <Book className="w-8 h-8 text-blue-600" />
             </div>
           </div>
-          
+
           <div className="bg-white rounded-xl p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">API Calls Today</p>
+                <p className="text-gray-600 text-sm font-medium">
+                  API Calls Today
+                </p>
                 <p className="text-2xl font-bold text-purple-600">1,284</p>
               </div>
               <FileText className="w-8 h-8 text-purple-600" />
@@ -169,11 +181,13 @@ export default function APIDocumentationPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">Getting Started</h3>
-                <p className="text-gray-600 text-sm">Quick start guide and tutorials</p>
+                <p className="text-gray-600 text-sm">
+                  Quick start guide and tutorials
+                </p>
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-[#1ABC9C] transition cursor-pointer">
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -185,7 +199,7 @@ export default function APIDocumentationPage() {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-[#1ABC9C] transition cursor-pointer">
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -193,7 +207,9 @@ export default function APIDocumentationPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">API Reference</h3>
-                <p className="text-gray-600 text-sm">Complete endpoint documentation</p>
+                <p className="text-gray-600 text-sm">
+                  Complete endpoint documentation
+                </p>
               </div>
             </div>
           </div>
@@ -203,7 +219,9 @@ export default function APIDocumentationPage() {
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">API Endpoints</h2>
+              <h2 className="text-lg font-semibold text-gray-900">
+                API Endpoints
+              </h2>
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -253,12 +271,20 @@ export default function APIDocumentationPage() {
                   <tr key={api.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{api.name}</div>
-                        <div className="text-sm text-gray-500 font-mono">{api.endpoint}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {api.name}
+                        </div>
+                        <div className="text-sm text-gray-500 font-mono">
+                          {api.endpoint}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${getMethodColor(api.method)}`}>
+                      <span
+                        className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${getMethodColor(
+                          api.method
+                        )}`}
+                      >
                         {api.method}
                       </span>
                     </td>
@@ -269,7 +295,11 @@ export default function APIDocumentationPage() {
                       {api.version}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(api.status)}`}>
+                      <span
+                        className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                          api.status
+                        )}`}
+                      >
                         {api.status}
                       </span>
                     </td>

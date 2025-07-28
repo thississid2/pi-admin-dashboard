@@ -295,7 +295,9 @@ export default function AdminDashboard() {
                       )}`}
                     >
                       {getStatusIcon(merchant.status)}
-                      <span className="truncate">{merchant.status.replace("_", " ")}</span>
+                      <span className="truncate">
+                        {merchant.status.replace("_", " ")}
+                      </span>
                     </span>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">

@@ -11,7 +11,9 @@ export default function SettingsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-            <p className="text-gray-600">Manage system configuration and preferences</p>
+            <p className="text-gray-600">
+              Manage system configuration and preferences
+            </p>
           </div>
         </div>
 
@@ -23,7 +25,9 @@ export default function SettingsPage() {
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Settings className="w-5 h-5 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">General Settings</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                General Settings
+              </h3>
             </div>
             <div className="space-y-4">
               <div>
@@ -41,12 +45,12 @@ export default function SettingsPage() {
                   Time Zone
                 </label>
                 <div className="relative">
-                  <select 
+                  <select
                     className="appearance-none w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1ABC9C] focus:border-[#1ABC9C] bg-white shadow-sm hover:border-gray-400 transition-colors"
-                    style={{ 
-                      backgroundImage: 'none',
-                      WebkitAppearance: 'none',
-                      MozAppearance: 'none'
+                    style={{
+                      backgroundImage: "none",
+                      WebkitAppearance: "none",
+                      MozAppearance: "none",
                     }}
                   >
                     <option>UTC</option>
@@ -55,14 +59,20 @@ export default function SettingsPage() {
                     <option>GMT</option>
                   </select>
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                      <path d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/>
+                    <svg
+                      className="fill-current h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" />
                     </svg>
                   </div>
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Maintenance Mode</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Maintenance Mode
+                </span>
                 <button className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#1ABC9C] focus:ring-offset-2 bg-gray-200">
                   <span className="translate-x-0 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
                 </button>
@@ -76,17 +86,23 @@ export default function SettingsPage() {
               <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                 <Users className="w-5 h-5 text-green-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">User Management</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                User Management
+              </h3>
             </div>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Allow User Registration</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Allow User Registration
+                </span>
                 <button className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#1ABC9C] focus:ring-offset-2 bg-[#1ABC9C]">
                   <span className="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
                 </button>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Require Email Verification</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Require Email Verification
+                </span>
                 <button className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#1ABC9C] focus:ring-offset-2 bg-[#1ABC9C]">
                   <span className="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
                 </button>
@@ -110,7 +126,9 @@ export default function SettingsPage() {
               <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                 <Globe className="w-5 h-5 text-purple-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">API Configuration</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                API Configuration
+              </h3>
             </div>
             <div className="space-y-4">
               <div>
@@ -134,7 +152,9 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Enable API Logging</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Enable API Logging
+                </span>
                 <button className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#1ABC9C] focus:ring-offset-2 bg-[#1ABC9C]">
                   <span className="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
                 </button>
@@ -152,13 +172,17 @@ export default function SettingsPage() {
             </div>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Two-Factor Authentication</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Two-Factor Authentication
+                </span>
                 <button className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#1ABC9C] focus:ring-offset-2 bg-[#1ABC9C]">
                   <span className="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
                 </button>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">IP Whitelist</span>
+                <span className="text-sm font-medium text-gray-700">
+                  IP Whitelist
+                </span>
                 <button className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#1ABC9C] focus:ring-offset-2 bg-gray-200">
                   <span className="translate-x-0 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
                 </button>
@@ -168,21 +192,27 @@ export default function SettingsPage() {
                   Password Policy
                 </label>
                 <div className="relative">
-                  <select 
+                  <select
                     className="appearance-none w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1ABC9C] focus:border-[#1ABC9C] bg-white shadow-sm hover:border-gray-400 transition-colors"
-                    style={{ 
-                      backgroundImage: 'none',
-                      WebkitAppearance: 'none',
-                      MozAppearance: 'none'
+                    style={{
+                      backgroundImage: "none",
+                      WebkitAppearance: "none",
+                      MozAppearance: "none",
                     }}
                   >
-                    <option>Strong (8+ chars, mixed case, numbers, symbols)</option>
+                    <option>
+                      Strong (8+ chars, mixed case, numbers, symbols)
+                    </option>
                     <option>Medium (6+ chars, mixed case, numbers)</option>
                     <option>Basic (6+ chars)</option>
                   </select>
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                      <path d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/>
+                    <svg
+                      className="fill-current h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" />
                     </svg>
                   </div>
                 </div>

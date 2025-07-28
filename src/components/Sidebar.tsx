@@ -108,7 +108,7 @@ export default function Sidebar() {
           {sidebarItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
-            
+
             return (
               <li key={item.name}>
                 <Link
@@ -135,7 +135,9 @@ export default function Sidebar() {
             <span className="text-white font-bold text-xs">JS</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white font-medium text-sm truncate">John Smith</p>
+            <p className="text-white font-medium text-sm truncate">
+              John Smith
+            </p>
             <p className="text-gray-400 text-xs truncate">Admin</p>
           </div>
           <div className="w-2 h-2 bg-[#1ABC9C] rounded-full flex-shrink-0"></div>
