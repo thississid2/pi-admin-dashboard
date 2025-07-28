@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import DashboardLayout from "@/components/DashboardLayout";
 import {
   ArrowLeft,
   Globe,
@@ -79,29 +80,36 @@ export default function WebsiteChecker() {
     }
   };
 
-  const downloadPDF = () => {
+  const downloadReport = () => {
     if (!report) return;
 
-    // Create PDF content
-    const pdfContent = `
-Website Legitimacy Report
+    // Create detailed report content
+    const reportContent = `Website Legitimacy Report
 ========================
 
 Domain: ${report.domain}
 Generated: ${new Date(report.timestamp).toLocaleString()}
 
+Overall Trust Score: ${report.trust_score}% (${report.trust_level})
+Onboarding Recommendation: ${report.recommendation}
+
+Category Breakdown:
+${report.category_scores?.map(cat => 
+  `${cat.category}: ${cat.score}/${cat.max_score} (${Math.round((cat.score/cat.max_score)*100)}%)`
+).join('\n')}
+
 Detailed Results:
-${report.results.map((r) => `${r.check}: ${r.result}`).join("\n")}
+${report.results.map((r) => `${r.check}: ${r.result} ${r.score ? `(Score: ${r.score})` : ''}`).join('\n')}
 
 Report Complete.
-Disclaimer: This is an automated check and not a guarantee of legitimacy.
+Disclaimer: This is an automated analysis and should be used as part of a comprehensive due diligence process.
     `;
 
-    const blob = new Blob([pdfContent], { type: "application/pdf" });
+    const blob = new Blob([reportContent], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `report-for-${report.domain}.pdf`;
+    a.download = `legitimacy-report-${report.domain}-${new Date().toISOString().split('T')[0]}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -135,36 +143,32 @@ Disclaimer: This is an automated check and not a guarantee of legitimacy.
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f6f8fa] to-[#eaf6f0]">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-6">
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/"
-                className="flex items-center gap-2 text-pi-dark hover:text-pi-dark-light"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                Back to Dashboard
-              </Link>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Globe className="w-8 h-8 text-pi-dark" />
-              <div>
-                <h1 className="text-2xl font-bold text-pi-dark">
-                  Website Legitimacy Checker
-                </h1>
-                <p className="text-gray-600">
-                  Analyze website security and legitimacy
-                </p>
-              </div>
+    <DashboardLayout>
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-4">
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-[#2C3E50] hover:text-[#1ABC9C]"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Back to Dashboard
+            </Link>
+          </div>
+          <div className="flex items-center space-x-4">
+            <Globe className="w-8 h-8 text-[#2C3E50]" />
+            <div>
+              <h1 className="text-2xl font-bold text-[#2C3E50]">
+                Website Legitimacy Checker
+              </h1>
+              <p className="text-gray-600">
+                Analyze website security and legitimacy
+              </p>
             </div>
           </div>
         </div>
-      </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Input Form */}
         <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-100 mb-8">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -242,11 +246,11 @@ Disclaimer: This is an automated check and not a guarantee of legitimacy.
                 </p>
               </div>
               <button
-                onClick={downloadPDF}
+                onClick={downloadReport}
                 className="flex items-center gap-2 bg-pi-green text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
               >
                 <Download className="w-4 h-4" />
-                Download PDF
+                Download Report
               </button>
             </div>
 
@@ -368,7 +372,7 @@ Disclaimer: This is an automated check and not a guarantee of legitimacy.
             </div>
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
