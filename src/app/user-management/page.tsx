@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
 import { UserCheck, Search, Users, Settings, Mail } from "@/components/icons";
 
@@ -91,9 +92,11 @@ export default function UserManagementPage() {
             </h1>
             <p className="text-gray-600">Manage system users and permissions</p>
           </div>
-          <button className="bg-[#1ABC9C] text-white px-4 py-2 rounded-lg hover:bg-[#16A085] transition">
-            Add New User
-          </button>
+          <Link href="/user-management/add">
+            <button className="bg-[#1ABC9C] text-white px-4 py-2 rounded-lg hover:bg-[#16A085] transition">
+              Add New User
+            </button>
+          </Link>
         </div>
 
         {/* Stats Cards */}
