@@ -48,15 +48,30 @@ export default function AddUserPage() {
     e.preventDefault();
 
     try {
-      // Here you would typically send the data to your backend API
-      console.log("User data to be submitted:", formData);
+      // Send data to backend API
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
-      // For now, we'll just show an alert and redirect back
-      alert("User created successfully!");
-      router.push("/user-management");
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("User created successfully!");
+        router.push("/user-management");
+      } else {
+        throw new Error(result.error || "Failed to create user");
+      }
     } catch (error) {
       console.error("Error creating user:", error);
-      alert("Error creating user. Please try again.");
+      alert(
+        `Error creating user: ${
+          error instanceof Error ? error.message : "Please try again."
+        }`
+      );
     }
   };
 
