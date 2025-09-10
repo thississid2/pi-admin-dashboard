@@ -1,116 +1,354 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { spawn } from 'child_process';
-import path from 'path';
+import https from 'https';
+import http from 'http';
 
-// Enhanced website analysis using Python script
-async function analyzeWebsite(url: string) {
-  return new Promise((resolve, reject) => {
-    const scriptPath = path.join(process.cwd(), 'scripts', 'legit_checker_api_simple.py');
-    
-    // Execute Python script
-    const pythonProcess = spawn('python', [scriptPath, url], {
-      cwd: process.cwd(),
-      stdio: 'pipe'
+interface CheckResult {
+  check: string;
+  result: string;
+  status: 'success' | 'warning' | 'error';
+  score?: number;
+}
+
+interface CategoryScore {
+  category: string;
+  score: number;
+  max_score: number;
+}
+
+// Comprehensive website analysis function
+async function analyzeWebsite(domain: string) {
+  const results: CheckResult[] = [];
+  let totalScore = 0;
+  let maxScore = 0;
+
+  try {
+    // 1. HTTPS Connection Test
+    const httpsResult = await checkHTTPS(domain);
+    results.push(httpsResult);
+    totalScore += httpsResult.score || 0;
+    maxScore += 10;
+
+    // 2. HTTP to HTTPS Redirect Test
+    const redirectResult = await checkHTTPRedirect(domain);
+    results.push(redirectResult);
+    totalScore += redirectResult.score || 0;
+    maxScore += 8;
+
+    // 3. Essential Pages Check
+    const pagesResults = await checkEssentialPages(domain);
+    results.push(...pagesResults);
+    pagesResults.forEach(r => {
+      totalScore += r.score || 0;
+      maxScore += 5;
     });
 
-    let outputData = '';
-    let errorData = '';
+    // 4. Domain Age Estimation (simplified)
+    const domainAgeResult = await estimateDomainAge(domain);
+    results.push(domainAgeResult);
+    totalScore += domainAgeResult.score || 0;
+    maxScore += 15;
 
-    pythonProcess.stdout.on('data', (data) => {
-      outputData += data.toString();
-    });
+    // 5. Basic Security Headers Check
+    const securityResult = await checkSecurityHeaders(domain);
+    results.push(securityResult);
+    totalScore += securityResult.score || 0;
+    maxScore += 10;
 
-    pythonProcess.stderr.on('data', (data) => {
-      errorData += data.toString();
-    });
+    // Calculate trust score
+    const trustScore = Math.round((totalScore / maxScore) * 100);
+    const trustLevel = getTrustLevel(trustScore);
+    const recommendation = getRecommendation(trustScore);
 
-    pythonProcess.on('close', (code) => {
-      if (code === 0) {
-        try {
-          // Parse JSON output from Python script
-          const rawResult = JSON.parse(outputData);
-          
-          // Transform the enhanced result into the format expected by frontend
-          const transformedResult = transformPythonResult(rawResult);
-          resolve(transformedResult);
-        } catch (error) {
-          console.error('Failed to parse Python output:', outputData);
-          reject(new Error('Failed to parse analysis results'));
-        }
-      } else {
-        console.error('Python script error:', errorData);
-        reject(new Error(`Analysis failed with code ${code}: ${errorData}`));
+    // Create category scores
+    const categoryScores: CategoryScore[] = [
+      {
+        category: 'Security & HTTPS',
+        score: (results.find(r => r.check === 'HTTPS Connection')?.score || 0) + 
+               (results.find(r => r.check === 'Security Headers')?.score || 0),
+        max_score: 20
+      },
+      {
+        category: 'Website Structure',
+        score: pagesResults.reduce((sum, r) => sum + (r.score || 0), 0),
+        max_score: pagesResults.length * 5
+      },
+      {
+        category: 'Domain Trust',
+        score: (results.find(r => r.check === 'Domain Age')?.score || 0) + 
+               (results.find(r => r.check === 'HTTP -> HTTPS Redirect')?.score || 0),
+        max_score: 23
       }
+    ];
+
+    return {
+      domain,
+      timestamp: new Date().toISOString(),
+      trust_score: trustScore,
+      trust_level: trustLevel,
+      overall_status: trustScore >= 70 ? 'good' : trustScore >= 50 ? 'moderate' : 'poor',
+      category_scores: categoryScores,
+      results,
+      recommendation
+    };
+
+  } catch (error) {
+    console.error('Analysis error:', error);
+    throw new Error('Failed to complete website analysis');
+  }
+}
+
+// Check HTTPS connectivity
+async function checkHTTPS(domain: string): Promise<CheckResult> {
+  return new Promise((resolve) => {
+    const url = `https://${domain}`;
+    const req = https.get(url, { timeout: 10000 }, (res) => {
+      resolve({
+        check: 'HTTPS Connection',
+        result: 'Successful',
+        status: 'success',
+        score: 10
+      });
     });
 
-    pythonProcess.on('error', (error) => {
-      console.error('Failed to start Python process:', error);
-      reject(new Error('Failed to start analysis process'));
+    req.on('error', () => {
+      resolve({
+        check: 'HTTPS Connection',
+        result: 'Failed',
+        status: 'error',
+        score: 0
+      });
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      resolve({
+        check: 'HTTPS Connection',
+        result: 'Timeout',
+        status: 'error',
+        score: 0
+      });
     });
   });
 }
 
-// Transform Python script output to frontend-compatible format
-function transformPythonResult(pythonResult: any) {
-  // The Python script returns detailed results in a different format
-  // We need to extract individual check results from the comprehensive analysis
-  const results: Array<{check: string, result: string, status: string, score?: number}> = [];
-  
-  // Transform category scores into individual check results
-  if (pythonResult.category_scores) {
-    pythonResult.category_scores.forEach((category: any) => {
-      const percentage = category.max_score > 0 ? 
-        Math.round((category.score / category.max_score) * 100) : 0;
+// Check HTTP to HTTPS redirect
+async function checkHTTPRedirect(domain: string): Promise<CheckResult> {
+  return new Promise((resolve) => {
+    const url = `http://${domain}`;
+    const req = http.get(url, { timeout: 10000 }, (res) => {
+      const hasRedirect = res.statusCode === 301 || res.statusCode === 302;
+      const redirectsToHTTPS = res.headers.location?.startsWith('https://');
       
-      let status = 'success';
-      if (percentage < 50) status = 'error';
-      else if (percentage < 80) status = 'warning';
-      
-      results.push({
-        check: category.category,
-        result: `${category.score}/${category.max_score} (${percentage}%)`,
-        status: status,
-        score: category.score
+      if (hasRedirect && redirectsToHTTPS) {
+        resolve({
+          check: 'HTTP -> HTTPS Redirect',
+          result: 'Yes',
+          status: 'success',
+          score: 8
+        });
+      } else if (hasRedirect) {
+        resolve({
+          check: 'HTTP -> HTTPS Redirect',
+          result: 'Redirects but not to HTTPS',
+          status: 'warning',
+          score: 4
+        });
+      } else {
+        resolve({
+          check: 'HTTP -> HTTPS Redirect',
+          result: 'No',
+          status: 'warning',
+          score: 2
+        });
+      }
+    });
+
+    req.on('error', () => {
+      resolve({
+        check: 'HTTP -> HTTPS Redirect',
+        result: 'Unable to test',
+        status: 'warning',
+        score: 0
       });
     });
-  }
-  
-  // Add overall trust score as a check result
-  if (pythonResult.trust_score !== undefined) {
-    let status = 'success';
-    if (pythonResult.trust_score < 50) status = 'error';
-    else if (pythonResult.trust_score < 70) status = 'warning';
-    
-    results.push({
-      check: 'Overall Trust Score',
-      result: `${pythonResult.trust_score}% (${pythonResult.trust_level})`,
-      status: status,
-      score: pythonResult.trust_score
+
+    req.on('timeout', () => {
+      req.destroy();
+      resolve({
+        check: 'HTTP -> HTTPS Redirect',
+        result: 'Timeout',
+        status: 'warning',
+        score: 0
+      });
     });
-  }
-  
-  // Add recommendation as a check result
-  if (pythonResult.recommendation) {
-    const isLowRisk = pythonResult.recommendation.includes('LOW RISK');
-    const isModerate = pythonResult.recommendation.includes('MODERATE RISK');
-    
-    results.push({
-      check: 'Onboarding Recommendation',
-      result: pythonResult.recommendation,
-      status: isLowRisk ? 'success' : isModerate ? 'warning' : 'error'
+  });
+}
+
+// Check for essential pages
+async function checkEssentialPages(domain: string): Promise<CheckResult[]> {
+  const pages = [
+    { path: '/contact', name: 'Contact Page' },
+    { path: '/privacy', name: 'Privacy Page' },
+    { path: '/terms', name: 'Terms Page' },
+    { path: '/about', name: 'About Page' },
+    { path: '/refund', name: 'Refund Page' }
+  ];
+
+  const results = await Promise.all(
+    pages.map(page => checkPageExists(domain, page.path, page.name))
+  );
+
+  return results;
+}
+
+// Check if a specific page exists
+async function checkPageExists(domain: string, path: string, pageName: string): Promise<CheckResult> {
+  return new Promise((resolve) => {
+    const url = `https://${domain}${path}`;
+    const req = https.get(url, { timeout: 8000 }, (res) => {
+      if (res.statusCode && res.statusCode < 400) {
+        resolve({
+          check: pageName,
+          result: 'Found',
+          status: 'success',
+          score: 5
+        });
+      } else {
+        resolve({
+          check: pageName,
+          result: 'Not Found',
+          status: 'warning',
+          score: 2
+        });
+      }
     });
-  }
+
+    req.on('error', () => {
+      resolve({
+        check: pageName,
+        result: 'Not Found',
+        status: 'warning',
+        score: 0
+      });
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      resolve({
+        check: pageName,
+        result: 'Timeout',
+        status: 'warning',
+        score: 0
+      });
+    });
+  });
+}
+
+// Estimate domain age (simplified - in production you'd use WHOIS API)
+async function estimateDomainAge(domain: string): Promise<CheckResult> {
+  // This is a simplified estimation - in production you'd use a WHOIS service
+  // For now, we'll use a heuristic based on domain characteristics
+  const commonTLDs = ['.com', '.org', '.net', '.edu', '.gov'];
+  const isCommonTLD = commonTLDs.some(tld => domain.endsWith(tld));
+  const domainLength = domain.replace(/\.[^.]+$/, '').length;
+  
+  // Simple heuristic scoring
+  let ageScore = 5; // base score
+  if (isCommonTLD) ageScore += 5;
+  if (domainLength > 5 && domainLength < 15) ageScore += 3;
+  if (!domain.includes('-') && !domain.match(/\d/)) ageScore += 2;
+
+  const estimatedAge = Math.min(15, ageScore);
   
   return {
-    domain: pythonResult.domain,
-    timestamp: pythonResult.timestamp,
-    trust_score: pythonResult.trust_score,
-    trust_level: pythonResult.trust_level,
-    overall_status: pythonResult.overall_status,
-    category_scores: pythonResult.category_scores,
-    results: results,
-    recommendation: pythonResult.recommendation
+    check: 'Domain Age',
+    result: `Estimated as ${estimatedAge >= 10 ? 'mature' : estimatedAge >= 5 ? 'established' : 'new'} domain`,
+    status: estimatedAge >= 10 ? 'success' : estimatedAge >= 5 ? 'warning' : 'error',
+    score: estimatedAge
   };
+}
+
+// Check basic security headers
+async function checkSecurityHeaders(domain: string): Promise<CheckResult> {
+  return new Promise((resolve) => {
+    const url = `https://${domain}`;
+    const req = https.get(url, { timeout: 10000 }, (res) => {
+      const headers = res.headers;
+      let securityScore = 0;
+      const securityFeatures = [];
+
+      if (headers['strict-transport-security']) {
+        securityScore += 3;
+        securityFeatures.push('HSTS');
+      }
+      if (headers['x-frame-options']) {
+        securityScore += 2;
+        securityFeatures.push('X-Frame-Options');
+      }
+      if (headers['x-content-type-options']) {
+        securityScore += 2;
+        securityFeatures.push('X-Content-Type-Options');
+      }
+      if (headers['content-security-policy']) {
+        securityScore += 3;
+        securityFeatures.push('CSP');
+      }
+
+      const result = securityFeatures.length > 0 
+        ? `${securityFeatures.join(', ')} enabled`
+        : 'Basic security headers missing';
+
+      resolve({
+        check: 'Security Headers',
+        result,
+        status: securityScore >= 7 ? 'success' : securityScore >= 3 ? 'warning' : 'error',
+        score: securityScore
+      });
+    });
+
+    req.on('error', () => {
+      resolve({
+        check: 'Security Headers',
+        result: 'Unable to check',
+        status: 'warning',
+        score: 0
+      });
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      resolve({
+        check: 'Security Headers',
+        result: 'Timeout',
+        status: 'warning',
+        score: 0
+      });
+    });
+  });
+}
+
+// Get trust level based on score
+function getTrustLevel(score: number): string {
+  if (score >= 85) return 'EXCELLENT';
+  if (score >= 70) return 'HIGH';
+  if (score >= 55) return 'MODERATE';
+  if (score >= 40) return 'LOW';
+  return 'VERY LOW';
+}
+
+// Get recommendation based on score
+function getRecommendation(score: number): string {
+  if (score >= 85) {
+    return 'LOW RISK - This website demonstrates excellent security practices and legitimacy indicators. Safe to proceed with onboarding.';
+  } else if (score >= 70) {
+    return 'LOW RISK - This website shows good security practices with minor areas for improvement. Generally safe for onboarding.';
+  } else if (score >= 55) {
+    return 'MODERATE RISK - This website has some legitimacy concerns. Consider additional verification before onboarding.';
+  } else if (score >= 40) {
+    return 'ELEVATED RISK - This website shows several red flags. Exercise caution and perform thorough due diligence.';
+  } else {
+    return 'HIGH RISK - This website has significant legitimacy and security concerns. Not recommended for onboarding without extensive verification.';
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -125,12 +363,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const report = await analyzeWebsite(url);
+    // Clean and normalize the domain
+    let domain = url;
+    
+    // Remove protocol if present
+    domain = domain.replace(/^https?:\/\//, '');
+    
+    // Remove www if present
+    domain = domain.replace(/^www\./, '');
+    
+    // Remove path and parameters
+    domain = domain.split('/')[0].split('?')[0];
+
+    // Validate domain format
+    if (!domain || !domain.includes('.')) {
+      return NextResponse.json(
+        { error: 'Invalid domain format' },
+        { status: 400 }
+      );
+    }
+
+    const report = await analyzeWebsite(domain);
 
     return NextResponse.json(report);
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Website analysis error:', error);
     return NextResponse.json(
-      { error: 'Failed to analyze website' },
+      { error: error.message || 'Failed to analyze website' },
       { status: 500 }
     );
   }

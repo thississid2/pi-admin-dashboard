@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
-import ProtectedRoute from "@/components/ProtectedRoute";
 import {
   Users,
   FileText,
@@ -125,8 +124,7 @@ export default function AdminDashboard() {
   };
 
   return (
-    <ProtectedRoute>
-      <DashboardLayout>
+    <DashboardLayout>
       {/* Website Checker Button - Moved to top right */}
       <div className="flex justify-end mb-6">
         <Link
@@ -327,6 +325,5 @@ export default function AdminDashboard() {
         </div>
       </div>
     </DashboardLayout>
-    </ProtectedRoute>
   );
 }

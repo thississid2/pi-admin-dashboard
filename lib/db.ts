@@ -2,11 +2,11 @@ import { Pool, PoolClient } from 'pg';
 
 // Database configuration
 const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
+  host: process.env.DB_HOST || 'pi-database-instance-1.c5k40ukyg956.ap-south-1.rds.amazonaws.com',
   port: parseInt(process.env.DB_PORT || '5432'),
   database: process.env.DB_NAME || 'pi_database',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'password',
+  user: process.env.DB_USER || 'piadmin',
+  password: process.env.DB_PASSWORD || 'gowtham123',
   ssl: {
     rejectUnauthorized: false // For AWS RDS
   },
@@ -15,15 +15,6 @@ const dbConfig = {
   idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
   connectionTimeoutMillis: 2000, // Return an error if connection takes longer than 2 seconds
 };
-
-// Debug logging (remove in production)
-console.log('Database configuration:', {
-  host: dbConfig.host,
-  port: dbConfig.port,
-  database: dbConfig.database,
-  user: dbConfig.user,
-  password: dbConfig.password ? '***hidden***' : 'not set'
-});
 
 // Create connection pool
 const pool = new Pool(dbConfig);

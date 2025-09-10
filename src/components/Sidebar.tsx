@@ -18,11 +18,15 @@ import {
 } from "@/components/icons";
 
 interface User {
-  id: string;
-  username: string;
+  sub: string;
   email: string;
-  role: string;
-  createdAt?: string;
+  email_verified?: boolean;
+  phone_number?: string;
+  phone_number_verified?: boolean;
+  preferred_username?: string;
+  given_name?: string;
+  family_name?: string;
+  name?: string;
 }
 
 const sidebarItems = [
@@ -113,6 +117,20 @@ export default function Sidebar({ user: propUser }: { user?: User | null }) {
       .slice(0, 2);
   };
 
+  const getUserDisplayName = () => {
+    if (!user) return "Loading...";
+    return user.name || user.preferred_username || user.email?.split("@")[0] || "User";
+  };
+
+  const getUserRole = () => {
+    // You can enhance this based on Cognito groups or custom attributes
+    return "Admin";
+  };
+
+  const getUserId = () => {
+    return user?.sub || "N/A";
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -183,15 +201,15 @@ export default function Sidebar({ user: propUser }: { user?: User | null }) {
         >
           <div className="w-7 h-7 bg-[#1ABC9C] rounded-full flex items-center justify-center">
             <span className="text-white font-bold text-xs">
-              {user ? getInitials(user.username) : "U"}
+              {user ? getInitials(getUserDisplayName()) : "U"}
             </span>
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-white font-medium text-sm truncate">
-              {user?.username || "Loading..."}
+              {getUserDisplayName()}
             </p>
             <p className="text-gray-400 text-xs truncate capitalize">
-              {user?.role || "User"}
+              {getUserRole()}
             </p>
           </div>
           <div className="w-2 h-2 bg-[#1ABC9C] rounded-full flex-shrink-0"></div>
@@ -223,24 +241,24 @@ export default function Sidebar({ user: propUser }: { user?: User | null }) {
                 <div className="flex items-center space-x-4">
                   <div className="w-16 h-16 bg-[#1ABC9C] rounded-full flex items-center justify-center">
                     <span className="text-white font-bold text-xl">
-                      {getInitials(user.username)}
+                      {getInitials(getUserDisplayName())}
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{user.username}</h3>
-                    <p className="text-gray-600 capitalize">{user.role}</p>
+                    <h3 className="text-lg font-semibold text-gray-900">{getUserDisplayName()}</h3>
+                    <p className="text-gray-600 capitalize">{getUserRole()}</p>
                   </div>
                 </div>
                 
                 <div className="border-t border-gray-200 pt-4 space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">User ID</label>
-                    <p className="text-gray-900">{user.id}</p>
+                    <p className="text-gray-900">{getUserId()}</p>
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Username</label>
-                    <p className="text-gray-900">{user.username}</p>
+                    <p className="text-gray-900">{getUserDisplayName()}</p>
                   </div>
                   
                   <div>
@@ -251,22 +269,26 @@ export default function Sidebar({ user: propUser }: { user?: User | null }) {
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Role</label>
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full capitalize ${
-                      user.role === 'admin' 
+                      getUserRole() === 'admin' 
                         ? 'bg-red-100 text-red-800' 
-                        : user.role === 'manager'
+                        : getUserRole() === 'manager'
                         ? 'bg-blue-100 text-blue-800'
                         : 'bg-green-100 text-green-800'
                     }`}>
-                      {user.role}
+                      {getUserRole()}
                     </span>
                   </div>
                   
-                  {user.createdAt && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Account Created</label>
-                      <p className="text-gray-900">{formatDate(user.createdAt)}</p>
-                    </div>
-                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email Verified</label>
+                    <p className="text-gray-900">
+                      {user?.email_verified ? (
+                        <span className="text-green-600">✓ Verified</span>
+                      ) : (
+                        <span className="text-orange-600">⚠ Not Verified</span>
+                      )}
+                    </p>
+                  </div>
                 </div>
                 
                 <div className="border-t border-gray-200 pt-4">
