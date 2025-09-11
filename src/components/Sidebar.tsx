@@ -15,6 +15,7 @@ import {
   Music,
   Shield,
   Settings,
+  UserShield,
 } from "@/components/icons";
 
 interface User {
@@ -39,6 +40,11 @@ const sidebarItems = [
     name: "Applications",
     href: "/applications",
     icon: Users,
+  },
+  {
+    name: "Admin Users",
+    href: "/admin-users",
+    icon: UserShield,
   },
   {
     name: "User Management",

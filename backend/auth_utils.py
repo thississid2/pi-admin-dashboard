@@ -1,5 +1,6 @@
 import jwt
 import requests
+import boto3
 from datetime import datetime, timezone
 from functools import wraps
 from flask import request, jsonify, session
@@ -10,6 +11,11 @@ class CognitoAuth:
         self.config = Config()
         self._jwks = None
         self._jwks_expiry = None
+        # Initialize Cognito Identity Provider client
+        self.cognito_client = boto3.client(
+            'cognito-idp',
+            region_name=self.config.AWS_COGNITO_REGION
+        )
     
     def get_jwks(self):
         """Get JSON Web Key Set from Cognito"""
@@ -76,6 +82,63 @@ class CognitoAuth:
         except Exception as e:
             print(f"Error getting user info: {e}")
             return None
+    
+    def get_user_groups(self, username):
+        """Get user's groups from Cognito"""
+        try:
+            response = self.cognito_client.admin_list_groups_for_user(
+                UserPoolId=self.config.AWS_COGNITO_USER_POOL_ID,
+                Username=username
+            )
+            return [group['GroupName'] for group in response.get('Groups', [])]
+        except Exception as e:
+            print(f"Error getting user groups: {e}")
+            return []
+    
+    def get_user_admin_role(self, username):
+        """Get user's admin role based on Cognito groups"""
+        groups = self.get_user_groups(username)
+        
+        # Map Cognito groups to admin roles (highest precedence first)
+        role_mapping = {
+            'pi-superadmin': 'SUPERADMIN',
+            'pi-admin': 'ADMIN', 
+            'pi-manager': 'MANAGER',
+            'pi-support': 'SUPPORT'
+        }
+        
+        # Return the highest priority role
+        for group in groups:
+            if group in role_mapping:
+                return role_mapping[group]
+        
+        return None  # No admin role assigned
+    
+    def add_user_to_group(self, username, group_name):
+        """Add user to a Cognito group"""
+        try:
+            self.cognito_client.admin_add_user_to_group(
+                UserPoolId=self.config.AWS_COGNITO_USER_POOL_ID,
+                Username=username,
+                GroupName=group_name
+            )
+            return True
+        except Exception as e:
+            print(f"Error adding user to group: {e}")
+            return False
+    
+    def remove_user_from_group(self, username, group_name):
+        """Remove user from a Cognito group"""
+        try:
+            self.cognito_client.admin_remove_user_from_group(
+                UserPoolId=self.config.AWS_COGNITO_USER_POOL_ID,
+                Username=username,
+                GroupName=group_name
+            )
+            return True
+        except Exception as e:
+            print(f"Error removing user from group: {e}")
+            return False
 
 def require_auth(f):
     """Decorator to require authentication"""
@@ -102,3 +165,40 @@ def require_auth(f):
         return f(*args, **kwargs)
     
     return decorated_function
+
+def require_admin_role(allowed_roles=None):
+    """Decorator to require specific admin roles"""
+    if allowed_roles is None:
+        allowed_roles = ['SUPERADMIN', 'ADMIN', 'MANAGER', 'SUPPORT']
+    
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            # First check authentication
+            if not session.get('authenticated') or not session.get('user'):
+                return jsonify({'error': 'Authentication required'}), 401
+            
+            user = session.get('user')
+            username = user.get('email') or user.get('preferred_username')
+            
+            if not username:
+                return jsonify({'error': 'User identifier not found'}), 401
+            
+            # Get user's admin role
+            auth = CognitoAuth()
+            user_role = auth.get_user_admin_role(username)
+            
+            if not user_role:
+                return jsonify({'error': 'Admin access required'}), 403
+            
+            if user_role not in allowed_roles:
+                return jsonify({'error': 'Insufficient permissions'}), 403
+            
+            # Store role in request context for use in the route
+            request.admin_role = user_role
+            request.admin_user = user
+            
+            return f(*args, **kwargs)
+        
+        return decorated_function
+    return decorator
