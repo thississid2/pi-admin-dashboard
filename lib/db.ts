@@ -2,11 +2,11 @@ import { Pool, PoolClient } from 'pg';
 
 // Database configuration
 const dbConfig = {
-  host: process.env.DB_HOST || 'pi-database-instance-1.c5k40ukyg956.ap-south-1.rds.amazonaws.com',
+  host: process.env.DB_HOST || 'pi-symphony-dev-rds-aps1-db-primary-instance-1.cvy62s2q2odo.ap-south-1.rds.amazonaws.com',
   port: parseInt(process.env.DB_PORT || '5432'),
   database: process.env.DB_NAME || 'pi_database',
   user: process.env.DB_USER || 'piadmin',
-  password: process.env.DB_PASSWORD || 'gowtham123',
+  password: process.env.DB_PASSWORD || 'Payintellidevdb1234#',
   ssl: {
     rejectUnauthorized: false // For AWS RDS
   },

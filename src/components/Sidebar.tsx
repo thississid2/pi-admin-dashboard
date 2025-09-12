@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useAuth } from "@/hooks/useAuthCognito";
 import {
   BarChart3,
   Users,
@@ -95,8 +97,11 @@ const sidebarItems = [
 
 export default function Sidebar({ user: propUser }: { user?: User | null }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(propUser || null);
   const [showUserDetails, setShowUserDetails] = useState(false);
+  const { user: adminUser } = useAdminAuth(); // Get admin user data
+  const { logout } = useAuth(); // Get logout function
 
   useEffect(() => {
     if (propUser) {
@@ -129,23 +134,42 @@ export default function Sidebar({ user: propUser }: { user?: User | null }) {
   };
 
   const getUserRole = () => {
-    // You can enhance this based on Cognito groups or custom attributes
-    return "Admin";
+    // Get role from admin auth context
+    if (adminUser?.role) {
+      switch (adminUser.role) {
+        case 'SUPERADMIN':
+          return 'Super Admin';
+        case 'ADMIN':
+          return 'Admin';
+        case 'MANAGER':
+          return 'Manager';
+        case 'SUPPORT':
+          return 'Support';
+        default:
+          return adminUser.role;
+      }
+    }
+    return "Admin"; // Fallback
   };
 
   const getUserId = () => {
     return user?.sub || "N/A";
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Redirect to login page after logout
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Force redirect even if logout fails
+      router.push("/login");
+    }
   };
 
   return (
@@ -176,7 +200,15 @@ export default function Sidebar({ user: propUser }: { user?: User | null }) {
       {/* Navigation */}
       <nav className="flex-1 py-3">
         <ul className="space-y-1 px-2">
-          {sidebarItems.map((item) => {
+          {sidebarItems
+            .filter((item) => {
+              // Filter User Management for SUPERADMIN only
+              if (item.href === '/user-management') {
+                return adminUser?.role === 'SUPERADMIN';
+              }
+              return true; // Show all other items
+            })
+            .map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
 
@@ -275,9 +307,11 @@ export default function Sidebar({ user: propUser }: { user?: User | null }) {
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Role</label>
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full capitalize ${
-                      getUserRole() === 'admin' 
+                      getUserRole() === 'Super Admin' 
+                        ? 'bg-purple-100 text-purple-800' 
+                        : getUserRole() === 'Admin'
                         ? 'bg-red-100 text-red-800' 
-                        : getUserRole() === 'manager'
+                        : getUserRole() === 'Manager'
                         ? 'bg-blue-100 text-blue-800'
                         : 'bg-green-100 text-green-800'
                     }`}>
@@ -297,7 +331,13 @@ export default function Sidebar({ user: propUser }: { user?: User | null }) {
                   </div>
                 </div>
                 
-                <div className="border-t border-gray-200 pt-4">
+                <div className="border-t border-gray-200 pt-4 space-y-3">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors font-medium"
+                  >
+                    Logout
+                  </button>
                   <button
                     onClick={() => setShowUserDetails(false)}
                     className="w-full bg-[#1ABC9C] text-white py-2 px-4 rounded-lg hover:bg-[#16A085] transition-colors"

@@ -4,6 +4,8 @@ import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
+import ProtectedAdminRoute from "@/components/ProtectedAdminRoute";
+import { AdminRole } from "@/types/adminUsers";
 import { UserCheck, Search, Users, Settings, Mail } from "@/components/icons";
 
 // Type definitions for user data from database
@@ -62,6 +64,14 @@ const getStatusColor = (status: string) => {
 };
 
 export default function UserManagementPage() {
+  return (
+    <ProtectedAdminRoute requiredRoles={[AdminRole.SUPERADMIN]}>
+      <UserManagementContent />
+    </ProtectedAdminRoute>
+  );
+}
+
+function UserManagementContent() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);

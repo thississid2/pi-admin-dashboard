@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import NotificationPanel from "@/components/NotificationPanel";
 import { useAuth } from "@/hooks/useAuthCognito";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 interface User {
   sub: string;
@@ -27,6 +28,7 @@ export default function DashboardLayout({
   const [showUserMenu, setShowUserMenu] = useState(false);
   const router = useRouter();
   const { user, logout, isAuthenticated, isLoading } = useAuth();
+  const { user: adminUser } = useAdminAuth(); // Get admin user data
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -50,8 +52,16 @@ export default function DashboardLayout({
     };
   }, [showUserMenu]);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Redirect to login page after logout
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Force redirect even if logout fails
+      router.push("/login");
+    }
   };
 
   const getInitials = (name: string) => {
@@ -69,8 +79,22 @@ export default function DashboardLayout({
   };
 
   const getUserRole = () => {
-    // You can enhance this based on Cognito groups or custom attributes
-    return "Admin";
+    // Get role from admin auth context
+    if (adminUser?.role) {
+      switch (adminUser.role) {
+        case 'SUPERADMIN':
+          return 'Super Admin';
+        case 'ADMIN':
+          return 'Admin';
+        case 'MANAGER':
+          return 'Manager';
+        case 'SUPPORT':
+          return 'Support';
+        default:
+          return adminUser.role;
+      }
+    }
+    return "Admin"; // Fallback
   };
 
   // Show loading state while checking authentication
