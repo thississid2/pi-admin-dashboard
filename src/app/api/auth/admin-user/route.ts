@@ -4,13 +4,13 @@ import { CognitoIdentityProviderClient, AdminListGroupsForUserCommand, ListUsers
 
 // Configure AWS SDK v3
 const cognito = new CognitoIdentityProviderClient({
-  region: process.env.AWS_REGION,
+  region: process.env.NEXT_PUBLIC_REGION,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: process.env.NEXT_PUBLIC_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.NEXT_PUBLIC_SECRET_ACCESS_KEY!,
   },
 });
-const USER_POOL_ID = process.env.COGNITO_USER_POOL_ID;
+const USER_POOL_ID = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID;
 
 // Function to map Cognito group to AdminRole
 function mapGroupToRole(groupName: string): AdminRole {
