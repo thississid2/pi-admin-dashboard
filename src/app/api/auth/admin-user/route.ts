@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AdminUser, AdminRole, AdminUserStatus } from '@/types/adminUsers';
-import AWS from 'aws-sdk';
+import { CognitoIdentityProviderClient, AdminListGroupsForUserCommand, ListUsersCommand } from '@aws-sdk/client-cognito-identity-provider';
 
-// Configure AWS
-AWS.config.update({
+// Configure AWS SDK v3
+const cognito = new CognitoIdentityProviderClient({
   region: process.env.AWS_REGION,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
 });
-
-const cognito = new AWS.CognitoIdentityServiceProvider();
 const USER_POOL_ID = process.env.COGNITO_USER_POOL_ID;
 
 // Function to map Cognito group to AdminRole
@@ -31,12 +31,12 @@ function mapGroupToRole(groupName: string): AdminRole {
 // Function to get user's groups and determine role
 async function getUserRole(username: string): Promise<AdminRole> {
   try {
-    const params = {
+    const command = new AdminListGroupsForUserCommand({
       UserPoolId: USER_POOL_ID!,
       Username: username,
-    };
+    });
 
-    const userGroups = await cognito.adminListGroupsForUser(params).promise();
+    const userGroups = await cognito.send(command);
     
     // If user has multiple groups, return the highest priority role
     const groups = userGroups.Groups || [];
@@ -103,13 +103,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Find the user in Cognito
-    const listUsersParams = {
+    const listUsersCommand = new ListUsersCommand({
       UserPoolId: USER_POOL_ID!,
       Filter: `email = "${currentUserEmail}"`,
       Limit: 1
-    };
+    });
 
-    const usersResult = await cognito.listUsers(listUsersParams).promise();
+    const usersResult = await cognito.send(listUsersCommand);
     const cognitoUser = usersResult.Users?.[0];
 
     if (!cognitoUser) {

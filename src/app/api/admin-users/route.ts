@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AdminUser, AdminRole, AdminUserStatus } from '@/types/adminUsers';
-import AWS from 'aws-sdk';
+import { 
+  CognitoIdentityProviderClient, 
+  AdminListGroupsForUserCommand, 
+  ListGroupsCommand,
+  ListUsersInGroupCommand 
+} from '@aws-sdk/client-cognito-identity-provider';
 
-// Configure AWS
-AWS.config.update({
+// Configure AWS SDK v3
+const cognito = new CognitoIdentityProviderClient({
   region: process.env.AWS_REGION,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
 });
-
-const cognito = new AWS.CognitoIdentityServiceProvider();
 const USER_POOL_ID = process.env.COGNITO_USER_POOL_ID;
 
 // Function to map Cognito group to AdminRole
@@ -31,12 +36,12 @@ function mapGroupToRole(groupName: string): AdminRole {
 // Function to get user's groups and determine role
 async function getUserRole(username: string): Promise<AdminRole> {
   try {
-    const params = {
+    const command = new AdminListGroupsForUserCommand({
       UserPoolId: USER_POOL_ID!,
       Username: username,
-    };
+    });
 
-    const userGroups = await cognito.adminListGroupsForUser(params).promise();
+    const userGroups = await cognito.send(command);
     
     // If user has multiple groups, return the highest priority role
     const groups = userGroups.Groups || [];
@@ -45,7 +50,7 @@ async function getUserRole(username: string): Promise<AdminRole> {
     }
 
     // Sort by precedence (lower number = higher priority)
-    groups.sort((a, b) => (a.Precedence || 999) - (b.Precedence || 999));
+    groups.sort((a: any, b: any) => (a.Precedence || 999) - (b.Precedence || 999));
     
     return mapGroupToRole(groups[0].GroupName!);
   } catch (error) {
@@ -60,27 +65,29 @@ async function fetchCognitoAdminUsers(): Promise<AdminUser[]> {
     const adminUsers: AdminUser[] = [];
     
     // Get all groups
-    const groupsResult = await cognito.listGroups({
+    const listGroupsCommand = new ListGroupsCommand({
       UserPoolId: USER_POOL_ID!,
-    }).promise();
+    });
+    const groupsResult = await cognito.send(listGroupsCommand);
 
     const adminGroups = ['pi-superadmin', 'pi-admin', 'pi-manager', 'pi-support'];
     
     // Get users from each admin group
     for (const group of groupsResult.Groups || []) {
       if (adminGroups.includes(group.GroupName!)) {
-        const usersInGroup = await cognito.listUsersInGroup({
+        const listUsersInGroupCommand = new ListUsersInGroupCommand({
           UserPoolId: USER_POOL_ID!,
           GroupName: group.GroupName!,
-        }).promise();
+        });
+        const usersInGroup = await cognito.send(listUsersInGroupCommand);
 
         for (const user of usersInGroup.Users || []) {
           // Check if user is already in our list (user might be in multiple groups)
           const existingUser = adminUsers.find(u => u.cognitoSub === user.Username);
           
           if (!existingUser) {
-            const email = user.Attributes?.find(attr => attr.Name === 'email')?.Value || '';
-            const preferredUsername = user.Attributes?.find(attr => attr.Name === 'preferred_username')?.Value || '';
+            const email = user.Attributes?.find((attr: any) => attr.Name === 'email')?.Value || '';
+            const preferredUsername = user.Attributes?.find((attr: any) => attr.Name === 'preferred_username')?.Value || '';
             
             // Determine user's role based on their groups
             const role = await getUserRole(user.Username!);

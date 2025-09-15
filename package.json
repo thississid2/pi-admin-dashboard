@@ -17,7 +17,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.0.1",
-    "aws-sdk": "^2.1692.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.590.0",
     "bcryptjs": "^3.0.2",
     "date-fns": "^2.30.0",
     "html2canvas": "^1.4.1",

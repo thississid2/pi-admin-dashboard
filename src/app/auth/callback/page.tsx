@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuthCognito";
 
-export default function AuthCallback() {
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { checkAuth } = useAuth();
@@ -134,5 +134,33 @@ export default function AuthCallback() {
         </div>
       </div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <div className="flex justify-center mb-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Loading...
+          </h2>
+          <p className="mt-2 text-center text-sm text-blue-600">
+            Please wait while we process your authentication...
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function AuthCallback() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <AuthCallbackContent />
+    </Suspense>
   );
 }
