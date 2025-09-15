@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { AdminUser, AdminRole, Permission, ROLE_PERMISSIONS } from '@/types/adminUsers';
+import { lambdaApi } from '@/lib/lambdaApi';
 
 interface AuthContextType {
   user: AdminUser | null;
@@ -16,21 +17,19 @@ export const useAdminAuth = (): AuthContextType => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get current user from auth API and map to admin user
+    // Get current user from Lambda API
     const fetchAdminUser = async () => {
       try {
-        const response = await fetch('/api/auth/admin-user', {
-          credentials: 'include' // Include cookies for session-based auth
-        });
-        if (response.ok) {
-          const adminUser = await response.json();
-          setUser(adminUser);
-        } else if (response.status === 403) {
-          // User is authenticated but doesn't have admin access
-          console.warn('User does not have admin access');
-        }
+        const adminUser = await lambdaApi.getCurrentUser() as AdminUser;
+        setUser(adminUser);
       } catch (error) {
         console.error('Error fetching admin user:', error);
+        // If unauthorized, user is not an admin or not authenticated
+        if (error instanceof Error && error.message.includes('401')) {
+          console.warn('User is not authenticated');
+        } else if (error instanceof Error && error.message.includes('403')) {
+          console.warn('User does not have admin access');
+        }
       } finally {
         setIsLoading(false);
       }

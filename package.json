@@ -6,7 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "deploy:lambda": "cd lambda && ./deploy.sh dev",
+    "deploy:lambda:prod": "cd lambda && ./deploy.sh prod",
+    "deploy:frontend": "npm run build",
+    "deploy:full": "npm run deploy:lambda && npm run deploy:frontend",
+    "deploy:full:prod": "npm run deploy:lambda:prod && npm run deploy:frontend",
+    "test:lambda": "cd lambda && sam local start-api",
+    "logs:lambda": "cd lambda && sam logs --stack-name pi-admin-dashboard-lambda-dev --tail"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.17",

@@ -1,22 +1,32 @@
 # Pi Admin Dashboard
 
-A modern, secure admin dashboard for merchant onboarding management with AWS Cognito authentication.
+A modern, serverless admin dashboard for merchant onboarding management with AWS Cognito authentication and Lambda backend.
 
 ## 🏗️ Architecture
 
-This application consists of two main components:
+This application consists of three main components:
 
 - **Frontend**: Next.js 14 with TypeScript and Tailwind CSS (Port 3000)
-- **Backend**: Flask authentication service with AWS Cognito integration (Port 5001)
+- **Backend**: AWS Lambda functions with API Gateway (Serverless)
+- **Authentication**: AWS Cognito for secure user management
+
+### Current Architecture:
+```
+Frontend (Next.js) → API Gateway → Lambda Functions → AWS Cognito
+                                ↓
+                           CloudWatch Logs
+```
 
 ## 🚀 Features
 
-- ✅ AWS Cognito OAuth2 authentication
+- ✅ AWS Cognito OAuth2 authentication with Lambda backend
+- ✅ Serverless architecture with AWS Lambda
 - ✅ Merchant onboarding management
 - ✅ Website legitimacy checker
-- ✅ User management system
+- ✅ Admin user management system
 - ✅ Real-time dashboard analytics
-- ✅ Secure session management
+- ✅ Secure JWT token-based authentication
+- ✅ Auto-scaling Lambda functions
 - ✅ Mobile-responsive design
 
 ## 📋 Prerequisites
@@ -253,7 +263,145 @@ curl -b cookies.txt http://localhost:5001/auth/user
 curl -b cookies.txt http://localhost:5001/auth/logout
 ```
 
-## 🔧 Configuration Details
+## � Deployment
+
+### Lambda Functions (Primary Backend)
+
+The application now uses AWS Lambda functions as the primary backend. Here's how to deploy:
+
+#### Prerequisites for Lambda Deployment
+
+1. **AWS CLI** installed and configured:
+   ```bash
+   aws configure
+   ```
+
+2. **SAM CLI** installed:
+   ```bash
+   pip install aws-sam-cli
+   ```
+
+3. **Environment Variables**:
+   ```bash
+   export COGNITO_USER_POOL_ID="ap-south-1_NK3qZ5B7u"
+   export COGNITO_CLIENT_ID="30d70ue3s05jjgm0iqcjr7laq4"
+   ```
+
+#### Deploy Lambda Functions
+
+**Development Environment:**
+```bash
+npm run deploy:lambda
+# or manually:
+# cd lambda && ./deploy.sh dev
+```
+
+**Production Environment:**
+```bash
+npm run deploy:lambda:prod
+# or manually:
+# cd lambda && ./deploy.sh prod
+```
+
+After deployment, you'll get an API Gateway URL like:
+```
+https://cyg01jt62k.execute-api.ap-south-1.amazonaws.com/dev/
+```
+
+#### Update Frontend Configuration
+
+Update your `.env.local` with the deployed API Gateway URL:
+```bash
+NEXT_PUBLIC_LAMBDA_API_URL=https://your-api-gateway-url.amazonaws.com/dev
+```
+
+#### Available NPM Scripts
+
+```bash
+# Deploy Lambda functions to dev
+npm run deploy:lambda
+
+# Deploy Lambda functions to production
+npm run deploy:lambda:prod
+
+# Build frontend for production
+npm run deploy:frontend
+
+# Deploy both Lambda and frontend (dev)
+npm run deploy:full
+
+# Deploy both Lambda and frontend (prod)
+npm run deploy:full:prod
+
+# Test Lambda functions locally
+npm run test:lambda
+
+# View Lambda function logs
+npm run logs:lambda
+```
+
+### Frontend Deployment
+
+#### Amplify Deployment (Recommended)
+
+1. **Push to Git repository** (GitHub, GitLab, etc.)
+
+2. **Go to AWS Amplify Console**
+
+3. **Connect your repository and deploy**
+
+4. **Set environment variables** in Amplify:
+   ```bash
+   NEXT_PUBLIC_LAMBDA_API_URL=https://your-api-gateway-url.amazonaws.com/dev
+   NEXT_PUBLIC_COGNITO_USER_POOL_ID=ap-south-1_NK3qZ5B7u
+   NEXT_PUBLIC_COGNITO_CLIENT_ID=30d70ue3s05jjgm0iqcjr7laq4
+   # ... other variables
+   ```
+
+#### Vercel Deployment
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy to Vercel
+vercel
+
+# Set environment variables in Vercel dashboard
+```
+
+### Complete Deployment Workflow
+
+1. **Deploy Lambda functions:**
+   ```bash
+   npm run deploy:lambda:prod
+   ```
+
+2. **Update environment variables** with the new API Gateway URL
+
+3. **Deploy frontend:**
+   ```bash
+   npm run deploy:frontend
+   ```
+
+4. **Test the deployed application**
+
+### Local Development with Lambda
+
+To test Lambda functions locally:
+
+```bash
+# Start local API Gateway
+npm run test:lambda
+
+# In another terminal, update .env.local
+NEXT_PUBLIC_LAMBDA_API_URL=http://localhost:3000
+
+# Start frontend
+npm run dev
+```
+
+## �🔧 Configuration Details
 
 ### Environment Variables
 

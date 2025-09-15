@@ -1,13 +1,13 @@
 "use client";
 
-import { useAuth } from "@/hooks/useAuthCognito";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user: adminUser, isLoading } = useAdminAuth();
 
   // Show loading spinner while checking authentication
   if (isLoading) {
@@ -22,7 +22,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   // Show nothing while redirecting to login (DashboardLayout will handle the redirect)
-  if (!isAuthenticated) {
+  if (!adminUser) {
     return null;
   }
 

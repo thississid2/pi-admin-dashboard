@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import NotificationPanel from "@/components/NotificationPanel";
-import { useAuth } from "@/hooks/useAuthCognito";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 interface User {
@@ -27,15 +26,14 @@ export default function DashboardLayout({
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const router = useRouter();
-  const { user, logout, isAuthenticated, isLoading } = useAuth();
-  const { user: adminUser } = useAdminAuth(); // Get admin user data
+  const { user: adminUser, isLoading } = useAdminAuth(); // Using Lambda-based admin auth
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated (no admin user found)
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !adminUser) {
       router.push("/login");
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [adminUser, isLoading, router]);
 
   useEffect(() => {
     // Close user menu when clicking outside
@@ -54,8 +52,9 @@ export default function DashboardLayout({
 
   const handleLogout = async () => {
     try {
-      await logout();
-      // Redirect to login page after logout
+      // For Lambda-based auth, we'll clear local storage and redirect
+      // In a full implementation, you'd call a logout endpoint
+      localStorage.removeItem('authToken');
       router.push("/login");
     } catch (error) {
       console.error("Logout error:", error);
@@ -74,8 +73,8 @@ export default function DashboardLayout({
   };
 
   const getUserDisplayName = () => {
-    if (!user) return "Admin";
-    return user.name || user.preferred_username || user.email?.split("@")[0] || "User";
+    if (!adminUser) return "Admin";
+    return `${adminUser.firstName} ${adminUser.lastName}` || adminUser.email?.split("@")[0] || "User";
   };
 
   const getUserRole = () => {
@@ -111,7 +110,7 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      <Sidebar user={user} />
+      <Sidebar user={adminUser} />
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex-shrink-0">
@@ -181,7 +180,7 @@ export default function DashboardLayout({
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="w-8 h-8 bg-[#1ABC9C] rounded-full flex items-center justify-center text-white font-bold text-sm hover:bg-[#16A085] transition-colors"
                   >
-                    {user ? getInitials(getUserDisplayName()) : "A"}
+                    {adminUser ? getInitials(getUserDisplayName()) : "A"}
                   </button>
                   
                   {/* User Dropdown Menu */}
@@ -191,7 +190,7 @@ export default function DashboardLayout({
                         <p className="text-sm font-medium text-gray-900">
                           {getUserDisplayName()}
                         </p>
-                        <p className="text-xs text-gray-500">{user?.email}</p>
+                        <p className="text-xs text-gray-500">{adminUser?.email}</p>
                       </div>
                       <button
                         onClick={handleLogout}

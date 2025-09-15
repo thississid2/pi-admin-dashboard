@@ -14,6 +14,7 @@ import {
   getStatusColor 
 } from '@/types/adminUsers';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { lambdaApi } from '@/lib/lambdaApi';
 import { 
   UserShield, 
   Users, 
@@ -41,11 +42,8 @@ export default function AdminUsersPage() {
   const fetchAdminUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin-users');
-      if (response.ok) {
-        const data = await response.json();
-        setAdminUsers(data.users || []);
-      }
+      const data = await lambdaApi.getAdminUsers() as { users: AdminUser[] };
+      setAdminUsers(data.users || []);
     } catch (error) {
       console.error('Error fetching admin users:', error);
     } finally {
@@ -59,19 +57,12 @@ export default function AdminUsersPage() {
     }
 
     try {
-      const response = await fetch(`/api/admin-users/${userId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        alert('Admin user deleted successfully!');
-        fetchAdminUsers();
-      } else {
-        const result = await response.json();
-        alert(`Failed to delete admin user: ${result.error}`);
-      }
+      await lambdaApi.deleteAdminUser(userId);
+      alert('Admin user deleted successfully!');
+      fetchAdminUsers();
     } catch (error) {
-      alert('An error occurred while deleting the admin user');
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred while deleting the admin user';
+      alert(`Failed to delete admin user: ${errorMessage}`);
       console.error('Error deleting admin user:', error);
     }
   };

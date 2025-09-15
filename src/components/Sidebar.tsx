@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
-import { useAuth } from "@/hooks/useAuthCognito";
+import { AdminUser } from "@/types/adminUsers";
 import {
   BarChart3,
   Users,
@@ -20,16 +20,8 @@ import {
   UserShield,
 } from "@/components/icons";
 
-interface User {
-  sub: string;
-  email: string;
-  email_verified?: boolean;
-  phone_number?: string;
-  phone_number_verified?: boolean;
-  preferred_username?: string;
-  given_name?: string;
-  family_name?: string;
-  name?: string;
+interface SidebarProps {
+  user?: AdminUser | null;
 }
 
 const sidebarItems = [
@@ -95,13 +87,13 @@ const sidebarItems = [
   },
 ];
 
-export default function Sidebar({ user: propUser }: { user?: User | null }) {
+export default function Sidebar({ user: propUser }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(propUser || null);
+  const [user, setUser] = useState<AdminUser | null>(propUser || null);
   const [showUserDetails, setShowUserDetails] = useState(false);
-  const { user: adminUser } = useAdminAuth(); // Get admin user data
-  const { logout } = useAuth(); // Get logout function
+  const { user: adminUser, hasPermission } = useAdminAuth(); // Get admin user data
+  // Remove old useAuth since we're now using Lambda-based auth
 
   useEffect(() => {
     if (propUser) {
@@ -128,9 +120,9 @@ export default function Sidebar({ user: propUser }: { user?: User | null }) {
       .slice(0, 2);
   };
 
-  const getUserDisplayName = () => {
-    if (!user) return "Loading...";
-    return user.name || user.preferred_username || user.email?.split("@")[0] || "User";
+    const getUserDisplayName = () => {
+    if (!user) return "User";
+    return `${user.firstName} ${user.lastName}` || user.email?.split("@")[0] || "User";
   };
 
   const getUserRole = () => {
@@ -153,7 +145,7 @@ export default function Sidebar({ user: propUser }: { user?: User | null }) {
   };
 
   const getUserId = () => {
-    return user?.sub || "N/A";
+    return user?.cognitoSub || user?.id || "N/A";
   };
 
     const formatDate = (dateString: string) => {
@@ -162,12 +154,11 @@ export default function Sidebar({ user: propUser }: { user?: User | null }) {
 
   const handleLogout = async () => {
     try {
-      await logout();
-      // Redirect to login page after logout
+      // For Lambda-based auth, clear local storage and redirect
+      localStorage.removeItem('authToken');
       router.push("/login");
     } catch (error) {
       console.error("Logout error:", error);
-      // Force redirect even if logout fails
       router.push("/login");
     }
   };
@@ -322,7 +313,7 @@ export default function Sidebar({ user: propUser }: { user?: User | null }) {
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Email Verified</label>
                     <p className="text-gray-900">
-                      {user?.email_verified ? (
+                      {user?.status === 'ACTIVE' ? (
                         <span className="text-green-600">✓ Verified</span>
                       ) : (
                         <span className="text-orange-600">⚠ Not Verified</span>
