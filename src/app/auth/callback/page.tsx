@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
@@ -102,5 +102,32 @@ export default function AuthCallbackPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading component for the Suspense fallback
+function AuthCallbackLoading() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#1ABC9C] to-[#16A085] flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+          <div className="mb-6">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1ABC9C] mx-auto mb-4"></div>
+            <h2 className="text-xl font-bold text-[#2C3E50] mb-2">
+              Loading
+            </h2>
+            <p className="text-gray-600">Please wait...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={<AuthCallbackLoading />}>
+      <AuthCallbackContent />
+    </Suspense>
   );
 }
