@@ -3,49 +3,53 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-function AuthCallbackContent() {
+function AuthSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState('Processing authentication...');
 
   useEffect(() => {
-    const handleAuthCallback = async () => {
+    const handleAuthSuccess = async () => {
       try {
-        // Get the authorization code from URL params
-        const code = searchParams.get('code');
-        const error = searchParams.get('error');
+        // Extract tokens from URL parameters (set by Lambda redirect)
+        const accessToken = searchParams.get('access_token');
+        const idToken = searchParams.get('id_token');
+        const refreshToken = searchParams.get('refresh_token');
         
-        if (error) {
+        if (!accessToken) {
           setStatus('error');
-          setMessage(error || 'Authentication failed');
+          setMessage('No access token received from authentication service');
           return;
         }
 
-        if (!code) {
-          setStatus('error');
-          setMessage('No authorization code received');
-          return;
+        // Store the access token for future API calls
+        localStorage.setItem('authToken', accessToken);
+        
+        // Optionally store other tokens
+        if (idToken) {
+          localStorage.setItem('idToken', idToken);
         }
-
-        // Redirect to Lambda callback handler which will process the code
-        // and redirect back to our success page with tokens
-        const lambdaCallbackUrl = `${process.env.NEXT_PUBLIC_LAMBDA_API_URL}/auth/callback?code=${encodeURIComponent(code)}`;
+        if (refreshToken) {
+          localStorage.setItem('refreshToken', refreshToken);
+        }
         
         setStatus('success');
-        setMessage('Authentication successful! Processing...');
+        setMessage('Authentication successful! Redirecting to dashboard...');
         
-        // Redirect to Lambda handler
-        window.location.href = lambdaCallbackUrl;
+        // Redirect to dashboard after a short delay
+        setTimeout(() => {
+          router.push('/');
+        }, 1500);
         
       } catch (error) {
-        console.error('Auth callback error:', error);
+        console.error('Auth success processing error:', error);
         setStatus('error');
-        setMessage('Authentication processing failed');
+        setMessage('Failed to process authentication tokens');
       }
     };
 
-    handleAuthCallback();
+    handleAuthSuccess();
   }, [searchParams, router]);
 
   return (
@@ -59,7 +63,7 @@ function AuthCallbackContent() {
                 <h2 className="text-xl font-bold text-[#2C3E50] mb-2">
                   Processing Authentication
                 </h2>
-                <p className="text-gray-600">Please wait while we complete your sign in...</p>
+                <p className="text-gray-600">Completing your sign in...</p>
               </>
             )}
             
@@ -71,7 +75,7 @@ function AuthCallbackContent() {
                   </svg>
                 </div>
                 <h2 className="text-xl font-bold text-green-600 mb-2">
-                  Authentication Successful
+                  Authentication Successful!
                 </h2>
                 <p className="text-gray-600">{message}</p>
               </>
@@ -85,7 +89,7 @@ function AuthCallbackContent() {
                   </svg>
                 </div>
                 <h2 className="text-xl font-bold text-red-600 mb-2">
-                  Authentication Failed
+                  Authentication Error
                 </h2>
                 <p className="text-gray-600 mb-4">{message}</p>
                 <button
@@ -103,8 +107,7 @@ function AuthCallbackContent() {
   );
 }
 
-// Loading component for the Suspense fallback
-function AuthCallbackLoading() {
+function AuthSuccessLoading() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1ABC9C] to-[#16A085] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -122,10 +125,10 @@ function AuthCallbackLoading() {
   );
 }
 
-export default function AuthCallbackPage() {
+export default function AuthSuccessPage() {
   return (
-    <Suspense fallback={<AuthCallbackLoading />}>
-      <AuthCallbackContent />
+    <Suspense fallback={<AuthSuccessLoading />}>
+      <AuthSuccessContent />
     </Suspense>
   );
 }

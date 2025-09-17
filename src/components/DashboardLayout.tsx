@@ -30,8 +30,12 @@ export default function DashboardLayout({
 
   // Redirect to login if not authenticated (no admin user found)
   useEffect(() => {
+    console.log('🏠 DashboardLayout auth check:', { isLoading, hasAdminUser: !!adminUser, adminUser });
     if (!isLoading && !adminUser) {
+      console.log('❌ DashboardLayout: No admin user found, redirecting to login');
       router.push("/login");
+    } else if (!isLoading && adminUser) {
+      console.log('✅ DashboardLayout: Admin user authenticated, staying on dashboard');
     }
   }, [adminUser, isLoading, router]);
 
@@ -52,9 +56,14 @@ export default function DashboardLayout({
 
   const handleLogout = async () => {
     try {
-      // For Lambda-based auth, we'll clear local storage and redirect
-      // In a full implementation, you'd call a logout endpoint
+      // Clear the authentication token
       localStorage.removeItem('authToken');
+      // Clear any other stored auth data
+      localStorage.removeItem('userInfo');
+      localStorage.removeItem('refreshToken');
+      
+      // For Lambda-based auth, we'll redirect to login immediately
+      // In a full implementation, you'd call a logout endpoint first
       router.push("/login");
     } catch (error) {
       console.error("Logout error:", error);

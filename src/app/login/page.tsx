@@ -55,19 +55,18 @@ export default function LoginPage() {
       // Get the Cognito configuration from environment variables
       const cognitoUserPoolId = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID;
       const cognitoClientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
+      const cognitoDomain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN;
       
-      if (!cognitoUserPoolId || !cognitoClientId) {
+      if (!cognitoUserPoolId || !cognitoClientId || !cognitoDomain) {
         setError("Cognito configuration not found. Please contact administrator.");
         setIsLoading(false);
         return;
       }
 
-      // Extract region from user pool ID (format: region_poolId)
-      const region = cognitoUserPoolId.split('_')[0];
       const redirectUri = `${window.location.origin}/auth/callback`;
       
-      // Construct Cognito hosted UI URL
-      const cognitoLoginUrl = `https://${cognitoUserPoolId.split('_')[1]}.auth.${region}.amazoncognito.com/login?` +
+      // Construct Cognito hosted UI URL using the configured domain
+      const cognitoLoginUrl = `https://${cognitoDomain}/login?` +
         `client_id=${cognitoClientId}&` +
         `response_type=code&` +
         `scope=email+openid+profile&` +

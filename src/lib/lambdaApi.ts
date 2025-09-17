@@ -22,7 +22,12 @@ class LambdaApiClient {
     data?: any,
     headers?: Record<string, string>
   ): Promise<T> {
-    const url = `${this.config.baseUrl}${endpoint}`;
+    // Ensure proper URL construction - remove double slashes
+    const baseUrl = this.config.baseUrl.endsWith('/') 
+      ? this.config.baseUrl.slice(0, -1) 
+      : this.config.baseUrl;
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = `${baseUrl}${cleanEndpoint}`;
     
     const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -30,7 +35,7 @@ class LambdaApiClient {
     };
 
     // Add Authorization header if token exists
-    const token = localStorage.getItem('authToken');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
     if (token) {
       requestHeaders['Authorization'] = `Bearer ${token}`;
     }
@@ -54,6 +59,7 @@ class LambdaApiClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error(`API Error (${response.status}):`, errorData);
         throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
@@ -87,8 +93,14 @@ class LambdaApiClient {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout for health check
       
-      console.log('Making fetch request to:', `${this.config.baseUrl}/auth/verify-token`);
-      const response = await fetch(`${this.config.baseUrl}/auth/verify-token`, {
+      // Ensure proper URL construction - remove double slashes
+      const baseUrl = this.config.baseUrl.endsWith('/') 
+        ? this.config.baseUrl.slice(0, -1) 
+        : this.config.baseUrl;
+      const healthCheckUrl = `${baseUrl}/auth/verify-token`;
+      
+      console.log('Making fetch request to:', healthCheckUrl);
+      const response = await fetch(healthCheckUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
