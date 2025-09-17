@@ -42,8 +42,18 @@ export default function AdminUsersPage() {
   const fetchAdminUsers = async () => {
     try {
       setLoading(true);
-      const data = await lambdaApi.getAdminUsers() as { users: AdminUser[] };
-      setAdminUsers(data.users || []);
+      const data = await lambdaApi.getAdminUsers();
+      // Convert API response to proper types
+      const typedUsers: AdminUser[] = (data || []).map(user => ({
+        ...user,
+        role: user.role as AdminRole,
+        status: user.status as AdminUserStatus,
+        permissions: (user.permissions || []) as Permission[],
+        createdAt: new Date(user.createdAt),
+        updatedAt: new Date(user.updatedAt),
+        lastLogin: user.lastLogin ? new Date(user.lastLogin) : undefined,
+      }));
+      setAdminUsers(typedUsers);
     } catch (error) {
       console.error('Error fetching admin users:', error);
     } finally {

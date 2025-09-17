@@ -2,6 +2,7 @@
 // Enhanced with better error handling, types, and configuration
 
 import { env } from './env';
+import { AdminUser } from '@/types/adminUsers';
 
 // API Response Types
 interface ApiResponse<T = any> {
@@ -236,23 +237,6 @@ class LambdaApiClient {
 
 // Export singleton instance
 export const lambdaApi = new LambdaApiClient();
-
-// Export types for TypeScript
-export interface AdminUser {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  status: string;
-  permissions: string[];
-  createdAt: string;
-  updatedAt: string;
-  lastLogin?: string;
-  createdBy: string;
-  department?: string;
-  cognitoSub: string;
-}
 
 export interface AuthUser {
   id: string;
