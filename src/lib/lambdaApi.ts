@@ -1,9 +1,38 @@
 // Lambda API Client for Pi Admin Dashboard
-// This replaces the Next.js API routes with Lambda function calls
+// Enhanced with better error handling, types, and configuration
+
+import { env } from './env';
+
+// API Response Types
+interface ApiResponse<T = any> {
+  data?: T;
+  error?: string;
+  success: boolean;
+}
+
+interface ApiError {
+  message: string;
+  status: number;
+  code?: string;
+}
+
+class ApiErrorClass extends Error {
+  status: number;
+  code?: string;
+
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.code = code;
+  }
+}
 
 interface ApiConfig {
   baseUrl: string;
   timeout: number;
+  retryAttempts: number;
+  retryDelay: number;
 }
 
 class LambdaApiClient {
@@ -11,8 +40,10 @@ class LambdaApiClient {
 
   constructor() {
     this.config = {
-      baseUrl: process.env.NEXT_PUBLIC_LAMBDA_API_URL || (typeof window !== 'undefined' ? '/api/lambda' : 'https://cyg01jt62k.execute-api.ap-south-1.amazonaws.com/dev'),
-      timeout: 30000,
+      baseUrl: env.lambdaApiUrl,
+      timeout: env.apiTimeout,
+      retryAttempts: 3,
+      retryDelay: 1000,
     };
   }
 
@@ -20,9 +51,10 @@ class LambdaApiClient {
     endpoint: string,
     method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
     data?: any,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
+    retryCount = 0
   ): Promise<T> {
-    // Ensure proper URL construction - remove double slashes
+    // Ensure proper URL construction
     const baseUrl = this.config.baseUrl.endsWith('/') 
       ? this.config.baseUrl.slice(0, -1) 
       : this.config.baseUrl;
@@ -31,6 +63,7 @@ class LambdaApiClient {
     
     const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       ...headers,
     };
 
@@ -57,43 +90,82 @@ class LambdaApiClient {
 
       clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error(`API Error (${response.status}):`, errorData);
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      // Handle different response types
+      let responseData;
+      const contentType = response.headers.get('content-type');
+      
+      if (contentType && contentType.includes('application/json')) {
+        responseData = await response.json();
+      } else {
+        responseData = await response.text();
       }
 
-      return await response.json();
+      if (!response.ok) {
+        const apiError: ApiError = {
+          message: responseData?.error || responseData?.message || `HTTP ${response.status}: ${response.statusText}`,
+          status: response.status,
+          code: responseData?.code,
+        };
+        
+        // Retry on certain status codes
+        if (this.shouldRetry(response.status) && retryCount < this.config.retryAttempts) {
+          await this.delay(this.config.retryDelay * (retryCount + 1));
+          return this.makeRequest(endpoint, method, data, headers, retryCount + 1);
+        }
+        
+        throw new ApiErrorClass(apiError.message, apiError.status, apiError.code);
+      }
+
+      return responseData;
     } catch (error) {
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          throw new Error('Request timeout');
+          throw new ApiErrorClass('Request timeout', 408);
         }
+        
+        // Retry on network errors
+        if (retryCount < this.config.retryAttempts && this.isNetworkError(error)) {
+          await this.delay(this.config.retryDelay * (retryCount + 1));
+          return this.makeRequest(endpoint, method, data, headers, retryCount + 1);
+        }
+        
         throw error;
       }
       throw new Error('An unknown error occurred');
     }
   }
 
+  private shouldRetry(status: number): boolean {
+    // Retry on server errors and certain client errors
+    return status >= 500 || status === 408 || status === 429;
+  }
+
+  private isNetworkError(error: Error): boolean {
+    return error.message.includes('fetch') || 
+           error.message.includes('network') || 
+           error.message.includes('ERR_NETWORK');
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   // Authentication API calls
-  async getCurrentUser() {
+  async getCurrentUser(): Promise<AdminUser> {
     return this.makeRequest('/auth/current-user');
   }
 
-  async verifyToken(token: string) {
+  async verifyToken(token: string): Promise<{ valid: boolean; user?: any }> {
     return this.makeRequest('/auth/verify-token', 'POST', { token });
   }
 
   // Health check endpoint
-  async healthCheck() {
+  async healthCheck(): Promise<{ status: string; statusCode: number }> {
     console.log('Starting health check...');
     try {
-      // Since there's no dedicated health endpoint, we'll check if the API Gateway is responding
-      // by making a request and checking if we get a proper HTTP response (even if it's an error)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout for health check
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
       
-      // Ensure proper URL construction - remove double slashes
       const baseUrl = this.config.baseUrl.endsWith('/') 
         ? this.config.baseUrl.slice(0, -1) 
         : this.config.baseUrl;
@@ -117,46 +189,48 @@ class LambdaApiClient {
         ok: response.ok
       });
       
-      // If we get any HTTP response (including 401, 400, etc.), the service is up and responding
-      // We only care that the API Gateway and Lambda are reachable, not about authentication
       const result = { status: 'healthy', statusCode: response.status };
       console.log('Health check successful:', result);
       return result;
     } catch (error) {
-      // Network errors, timeouts, or fetch failures indicate the service is down
       console.error('Health check failed:', error);
       throw new Error('Service unavailable');
     }
   }
 
   // Admin Users API calls
-  async getAdminUsers() {
+  async getAdminUsers(): Promise<AdminUser[]> {
     return this.makeRequest('/admin-users');
   }
 
-  async getAdminUser(id: string) {
+  async getAdminUser(id: string): Promise<AdminUser> {
     return this.makeRequest(`/admin-users/${id}`);
   }
 
-  async createAdminUser(userData: any) {
+  async createAdminUser(userData: Partial<AdminUser>): Promise<AdminUser> {
     return this.makeRequest('/admin-users', 'POST', userData);
   }
 
-  async updateAdminUser(id: string, userData: any) {
+  async updateAdminUser(id: string, userData: Partial<AdminUser>): Promise<AdminUser> {
     return this.makeRequest(`/admin-users/${id}`, 'PUT', userData);
   }
 
-  async deleteAdminUser(id: string) {
+  async deleteAdminUser(id: string): Promise<void> {
     return this.makeRequest(`/admin-users/${id}`, 'DELETE');
   }
 
-  // Utility methods
-  setBaseUrl(url: string) {
+  // Configuration methods
+  setBaseUrl(url: string): void {
     this.config.baseUrl = url;
   }
 
-  setTimeout(timeout: number) {
+  setTimeout(timeout: number): void {
     this.config.timeout = timeout;
+  }
+
+  setRetryConfig(attempts: number, delay: number): void {
+    this.config.retryAttempts = attempts;
+    this.config.retryDelay = delay;
   }
 }
 
@@ -190,4 +264,5 @@ export interface AuthUser {
   cognitoSub: string;
 }
 
+export { ApiErrorClass };
 export default lambdaApi;

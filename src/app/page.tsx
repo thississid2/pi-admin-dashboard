@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
+import { formatDate, getInitials } from "@/lib/utils";
+import { ROUTES, STATUS_COLORS } from "@/lib/constants";
 import {
   Users,
   FileText,
@@ -17,22 +19,27 @@ import {
   AlertTriangle,
 } from "@/components/icons";
 
-// Format date consistently for both server and client to avoid hydration errors
-const formatDate = (dateString: string, isClient: boolean = true) => {
-  if (!isClient) {
-    // Return a placeholder for server-side rendering
-    return "Loading...";
-  }
-  // Parse the date in UTC to avoid timezone issues
-  const date = new Date(dateString + "T00:00:00.000Z");
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  return `${month}/${day}/${year}`;
-};
+// Types
+interface Merchant {
+  id: string;
+  name: string;
+  email: string;
+  website: string;
+  status: keyof typeof STATUS_COLORS;
+  submittedAt: string;
+  documents: string[];
+  country: string;
+}
+
+interface DashboardStats {
+  totalMerchants: number;
+  pendingReviews: number;
+  approvedToday: number;
+  rejectedThisWeek: number;
+}
 
 // Mock data - replace with real API calls
-const mockMerchants = [
+const mockMerchants: Merchant[] = [
   {
     id: "AB-12345",
     name: "Gayatri Tech Solutions",
@@ -65,7 +72,7 @@ const mockMerchants = [
   },
 ];
 
-const stats = {
+const stats: DashboardStats = {
   totalMerchants: 156,
   pendingReviews: 23,
   approvedToday: 8,
@@ -73,10 +80,10 @@ const stats = {
 };
 
 export default function AdminDashboard() {
-  const [merchants, setMerchants] = useState(mockMerchants);
-  const [filter, setFilter] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isClient, setIsClient] = useState(false);
+  const [merchants, setMerchants] = useState<Merchant[]>(mockMerchants);
+  const [filter, setFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [isClient, setIsClient] = useState<boolean>(false);
 
   // Fix hydration issues
   useEffect(() => {
@@ -93,21 +100,6 @@ export default function AdminDashboard() {
     return matchesSearch && merchant.status === filter;
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "approved":
-        return "text-green-700 bg-green-100";
-      case "pending":
-        return "text-yellow-700 bg-yellow-100";
-      case "under_review":
-        return "text-blue-700 bg-blue-100";
-      case "rejected":
-        return "text-red-700 bg-red-100";
-      default:
-        return "text-gray-700 bg-gray-100";
-    }
-  };
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "approved":
@@ -123,12 +115,16 @@ export default function AdminDashboard() {
     }
   };
 
+  const getStatusColor = (status: keyof typeof STATUS_COLORS) => {
+    return STATUS_COLORS[status] || STATUS_COLORS.pending;
+  };
+
   return (
     <DashboardLayout>
       {/* Website Checker Button - Moved to top right */}
       <div className="flex justify-end mb-6">
         <Link
-          href="/website-checker"
+          href={ROUTES.WEBSITE_CHECKER}
           className="flex items-center gap-2 bg-[#1ABC9C] text-white px-4 py-2 rounded-lg hover:bg-[#16A085] transition"
         >
           <Globe className="w-4 h-4" />
@@ -306,12 +302,12 @@ export default function AdminDashboard() {
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(merchant.submittedAt, isClient)}
+                    {isClient ? formatDate(merchant.submittedAt) : "Loading..."}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
                     <div className="flex gap-2">
                       <Link
-                        href={`/merchants/${merchant.id}`}
+                        href={ROUTES.MERCHANT_DETAIL(merchant.id)}
                         className="text-[#1ABC9C] hover:text-[#16A085] text-sm font-medium"
                       >
                         View

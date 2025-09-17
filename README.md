@@ -1,6 +1,258 @@
 # Pi Admin Dashboard
 
-A modern, serverless admin dashboard for merchant onboarding management with AWS Cognito authentication and Lambda backend.
+Internal admin dashboard for PayIntelligence merchant onboarding management.
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- AWS CLI configured (for Lambda deployment)
+- PostgreSQL database access
+
+### Development Setup
+
+1. **Clone and Install**
+   ```bash
+   git clone <repository-url>
+   cd pi-admin-dashboard
+   npm install
+   ```
+
+2. **Environment Configuration**
+   ```bash
+   cp .env.example .env.local
+   # Edit .env.local with your configuration
+   ```
+
+3. **Start Development Server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Access Dashboard**
+   Open [http://localhost:3000](http://localhost:3000)
+
+## 🏗️ Architecture
+
+### Tech Stack
+- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
+- **Authentication**: AWS Cognito with JWT tokens
+- **Backend**: AWS Lambda functions + Next.js API routes
+- **Database**: PostgreSQL with connection pooling
+- **Deployment**: AWS Lambda + API Gateway
+
+### Project Structure
+```
+├── src/
+│   ├── app/                 # Next.js App Router pages
+│   ├── components/          # Reusable UI components
+│   ├── hooks/              # Custom React hooks
+│   ├── lib/                # Utilities, config, and API clients
+│   └── types/              # TypeScript type definitions
+├── deploylambdas/          # Lambda function source code
+├── public/                 # Static assets
+└── lib/                    # Shared database utilities
+```
+
+## 🔐 Authentication & Authorization
+
+### User Roles
+- **SUPERADMIN**: Full system access
+- **ADMIN**: Most permissions except user management
+- **MANAGER**: Client management and reporting
+- **SUPPORT**: Basic client management and support
+
+### Environment Variables
+```bash
+# Development mode settings
+NEXT_PUBLIC_SKIP_AUTH=true        # Skip auth in development
+
+# AWS Configuration
+NEXT_PUBLIC_LAMBDA_API_URL=your-api-gateway-url
+AWS_REGION=ap-south-1
+
+# Cognito Settings
+COGNITO_USER_POOL_ID=your-pool-id
+COGNITO_CLIENT_ID=your-client-id
+COGNITO_DOMAIN=your-domain.auth.region.amazoncognito.com
+```
+
+## 📱 Features
+
+### Dashboard Overview
+- Real-time merchant statistics
+- Application status tracking
+- Document management
+- Advanced filtering and search
+
+### User Management
+- Admin user creation and management
+- Role-based permissions
+- Activity tracking
+
+### Merchant Management
+- Application review workflow
+- Document verification
+- Status management
+- Country-specific compliance
+
+### Website Checker
+- Automated website analysis
+- Performance monitoring
+- Security assessment
+
+## 🛠️ Development
+
+### Available Scripts
+
+```bash
+# Development
+npm run dev                 # Start development server
+npm run build              # Build for production
+npm run start              # Start production server
+npm run lint               # Run ESLint
+
+# Lambda Functions
+npm run deploy:lambda       # Deploy Lambda functions (dev)
+npm run deploy:lambda:prod  # Deploy Lambda functions (prod)
+npm run test:lambda         # Test Lambda functions locally
+npm run logs:lambda         # View Lambda logs
+
+# Full Deployment
+npm run deploy:full         # Deploy both frontend and backend
+npm run deploy:full:prod    # Deploy to production
+```
+
+### Code Organization
+
+#### Components
+- **DashboardLayout**: Main layout wrapper with sidebar and header
+- **ProtectedRoute**: Basic authentication check
+- **ProtectedAdminRoute**: Role-based route protection
+- **ErrorBoundary**: Application error handling
+- **Loading**: Loading states and skeleton components
+
+#### Hooks
+- **useAdminAuth**: Authentication and user management
+- **useErrorHandler**: Error handling utilities
+
+#### Utilities
+- **constants**: Application configuration and constants
+- **utils**: Common utility functions
+- **env**: Environment variable management
+- **lambdaApi**: API client with retry logic and error handling
+
+### Styling Guidelines
+- Use Tailwind CSS for styling
+- Follow the established color scheme (Pi Green: #1ABC9C, Pi Dark: #2C3E50)
+- Maintain consistent spacing and component patterns
+- Use the provided icon components
+
+### Type Safety
+- All components use TypeScript
+- API responses are typed
+- Environment variables are validated
+- Database queries use typed interfaces
+
+## 🚢 Deployment
+
+### Lambda Functions
+Lambda functions are organized in `deploylambdas/`:
+- `pi-admin-auth/`: Authentication and user management
+- `pi-admin-auth-callback/`: OAuth callback handling
+- `pi-admin-auth-logout/`: Logout functionality
+- `pi-admin-users/`: Admin user CRUD operations
+
+### Frontend Deployment
+- Next.js build output can be deployed to any static hosting
+- Environment variables must be configured for production
+- CORS settings should match your domain
+
+### Database
+- PostgreSQL database with connection pooling
+- Migration scripts for schema changes
+- Backup and monitoring recommended
+
+## 🔧 Configuration
+
+### Tailwind Theme
+Custom colors defined in `tailwind.config.js`:
+```javascript
+colors: {
+  'pi-dark': '#112025',
+  'pi-dark-light': '#22313a',
+  'pi-green': '#1A7F5A',
+  'pi-green-light': '#E6F9F0',
+  'pi-green-border': '#B2F7EF',
+}
+```
+
+### API Endpoints
+All API calls are routed through API Gateway:
+```
+/auth/current-user          # Get current user
+/auth/verify-token          # Verify JWT token
+/admin-users               # CRUD operations for admin users
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **Authentication Issues**
+   - Check Cognito configuration
+   - Verify user group assignments
+   - Check JWT token expiration
+
+2. **API Connection Issues**
+   - Verify Lambda API URL
+   - Check CORS configuration
+   - Confirm AWS credentials
+
+3. **Database Connection Issues**
+   - Check database credentials
+   - Verify network connectivity
+   - Check connection pool settings
+
+### Development Mode
+Set `NEXT_PUBLIC_SKIP_AUTH=true` to bypass authentication during development.
+
+### Error Logging
+- Client errors are logged to browser console
+- Server errors are logged to Lambda CloudWatch
+- Database errors include connection pool information
+
+## 📝 Contributing
+
+### Code Style
+- Use TypeScript for all new code
+- Follow ESLint configuration
+- Write meaningful component and function names
+- Add JSDoc comments for complex functions
+
+### Git Workflow
+1. Create feature branch from `main`
+2. Make changes with descriptive commit messages
+3. Test locally before pushing
+4. Create pull request for review
+
+### Testing
+- Test authentication flows
+- Verify responsive design
+- Check error handling
+- Validate API integrations
+
+## 📞 Support
+
+For issues and questions:
+- Check the troubleshooting section above
+- Review CloudWatch logs for Lambda functions
+- Contact the development team
+
+## 📄 License
+
+Internal tool for PayIntelligence. All rights reserved.
 
 ## 🏗️ Architecture
 

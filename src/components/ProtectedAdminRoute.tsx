@@ -4,14 +4,14 @@ import { ReactNode } from 'react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { Permission, AdminRole } from '@/types/adminUsers';
 
-interface ProtectedRouteProps {
+interface ProtectedAdminRouteProps {
   children: ReactNode;
   requiredPermissions?: Permission[];
   requiredRoles?: AdminRole[];
   fallback?: ReactNode;
 }
 
-export default function ProtectedRoute({
+export default function ProtectedAdminRoute({
   children,
   requiredPermissions = [],
   requiredRoles = [],
@@ -23,7 +23,7 @@ export default function ProtectedRoute({
       </div>
     </div>
   ),
-}: ProtectedRouteProps) {
+}: ProtectedAdminRouteProps) {
   const { user, hasPermission, hasRole, isLoading } = useAdminAuth();
 
   if (isLoading) {
@@ -40,7 +40,7 @@ export default function ProtectedRoute({
 
   // Check if user has required permissions
   if (requiredPermissions.length > 0) {
-    const hasAllPermissions = requiredPermissions.every(permission => 
+    const hasAllPermissions = requiredPermissions.every((permission: Permission) => 
       hasPermission(permission)
     );
     if (!hasAllPermissions) {
@@ -50,7 +50,7 @@ export default function ProtectedRoute({
 
   // Check if user has required roles
   if (requiredRoles.length > 0) {
-    const hasRequiredRole = requiredRoles.some(role => hasRole(role));
+    const hasRequiredRole = requiredRoles.some((role: AdminRole) => hasRole(role));
     if (!hasRequiredRole) {
       return fallback;
     }
