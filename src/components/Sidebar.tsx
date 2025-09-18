@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
@@ -166,15 +167,8 @@ export default function Sidebar({ user: propUser }: SidebarProps) {
   return (
     <div className="w-56 bg-[#2C3E50] min-h-screen flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-[#34495E]">
-        <div className="flex items-center space-x-2">
-          <div className="w-7 h-7 bg-[#1ABC9C] rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">π</span>
-          </div>
-          <div>
-            <h1 className="text-white font-semibold text-base">Client Admin</h1>
-          </div>
-        </div>
+      <div className="p-4 border-b border-[#34495E] flex items-center justify-center">
+        <Image src="/pi-logo.svg" alt="PayIntelli Logo" width={120} height={45} />
       </div>
 
       {/* Search Bar */}
