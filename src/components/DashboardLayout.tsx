@@ -28,7 +28,13 @@ export default function DashboardLayout({
   const router = useRouter();
   const { user: adminUser, isLoading } = useAdminAuth(); // Using Lambda-based admin auth
 
-  // Note: Authentication redirect is now handled in the main page.tsx component
+
+  // Redirect to login only after loading is complete and user is not authenticated
+  useEffect(() => {
+    if (!isLoading && !adminUser) {
+      router.push('/login');
+    }
+  }, [isLoading, adminUser, router]);
 
   useEffect(() => {
     // Close user menu when clicking outside
@@ -72,13 +78,15 @@ export default function DashboardLayout({
       .slice(0, 2);
   };
 
+
+  // Only show email in user menu
   const getUserDisplayName = () => {
     if (!adminUser) return "Admin";
-    return `${adminUser.firstName} ${adminUser.lastName}` || adminUser.email?.split("@")[0] || "User";
+    return adminUser.email || "User";
   };
 
+
   const getUserRole = () => {
-    // Get role from admin auth context
     if (adminUser?.role) {
       switch (adminUser.role) {
         case 'SUPERADMIN':
@@ -93,7 +101,7 @@ export default function DashboardLayout({
           return adminUser.role;
       }
     }
-    return "Admin"; // Fallback
+    return "";
   };
 
   // Show loading state while checking authentication - handled in main page
@@ -186,12 +194,12 @@ export default function DashboardLayout({
                   
                   {/* User Dropdown Menu */}
                   {showUserMenu && (
-                    <div className="absolute right-0 top-10 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="absolute right-0 top-10 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                       <div className="px-4 py-2 border-b border-gray-100">
                         <p className="text-sm font-medium text-gray-900">
-                          {getUserDisplayName()}
+                          {adminUser?.email}
                         </p>
-                        <p className="text-xs text-gray-500">{adminUser?.email}</p>
+                        <p className="text-xs text-gray-500">{getUserRole()}</p>
                       </div>
                       <button
                         onClick={handleLogout}

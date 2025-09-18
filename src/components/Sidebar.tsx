@@ -225,19 +225,19 @@ export default function Sidebar({ user: propUser }: SidebarProps) {
       {/* User Profile */}
       <div className="p-3 border-t border-[#34495E]">
         <div 
-          className="flex items-center space-x-2 cursor-pointer hover:bg-[#34495E] rounded-md p-2 transition-colors"
+          className="flex items-center space-x-3 cursor-pointer hover:bg-[#34495E] rounded-md p-3 transition-colors"
           onClick={() => setShowUserDetails(!showUserDetails)}
         >
-          <div className="w-7 h-7 bg-[#1ABC9C] rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-xs">
-              {user ? getInitials(getUserDisplayName()) : "U"}
+          <div className="w-10 h-10 bg-[#1ABC9C] rounded-full flex items-center justify-center">
+            <span className="text-white font-bold text-lg">
+              {user && user.email ? user.email[0].toUpperCase() : "U"}
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white font-medium text-sm truncate">
-              {getUserDisplayName()}
+            <p className="text-white font-semibold text-base truncate">
+              {user?.email || "-"}
             </p>
-            <p className="text-gray-400 text-xs truncate capitalize">
+            <p className="text-gray-400 text-xs capitalize">
               {getUserRole()}
             </p>
           </div>
@@ -270,31 +270,19 @@ export default function Sidebar({ user: propUser }: SidebarProps) {
                 <div className="flex items-center space-x-4">
                   <div className="w-16 h-16 bg-[#1ABC9C] rounded-full flex items-center justify-center">
                     <span className="text-white font-bold text-xl">
-                      {getInitials(getUserDisplayName())}
+                      {getInitials(user.email || "U")}
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{getUserDisplayName()}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">{user.email}</h3>
                     <p className="text-gray-600 capitalize">{getUserRole()}</p>
                   </div>
                 </div>
-                
                 <div className="border-t border-gray-200 pt-4 space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">User ID</label>
-                    <p className="text-gray-900">{getUserId()}</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Username</label>
-                    <p className="text-gray-900">{getUserDisplayName()}</p>
-                  </div>
-                  
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Email Address</label>
                     <p className="text-gray-900">{user.email}</p>
                   </div>
-                  
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Role</label>
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full capitalize ${
@@ -309,19 +297,7 @@ export default function Sidebar({ user: propUser }: SidebarProps) {
                       {getUserRole()}
                     </span>
                   </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Email Verified</label>
-                    <p className="text-gray-900">
-                      {user?.status === 'ACTIVE' ? (
-                        <span className="text-green-600">✓ Verified</span>
-                      ) : (
-                        <span className="text-orange-600">⚠ Not Verified</span>
-                      )}
-                    </p>
-                  </div>
                 </div>
-                
                 <div className="border-t border-gray-200 pt-4 space-y-3">
                   <button
                     onClick={handleLogout}
