@@ -168,7 +168,7 @@ export default function Sidebar({ user: propUser }: SidebarProps) {
     <div className="w-56 bg-[#2C3E50] min-h-screen flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-[#34495E] flex items-center justify-center">
-  <Image src="/Pi%20-%20Logo%20+%20Title.png" alt="PayIntelli Logo" width={150} height={56} />
+  <Image src="/Pi_logo.png" alt="PayIntelli Logo" width={150} height={56} />
       </div>
 
       {/* Search Bar */}
