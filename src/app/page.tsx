@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
 import { formatDate, getInitials } from "@/lib/utils";
 import { ROUTES, STATUS_COLORS } from "@/lib/constants";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import {
   Users,
   FileText,
@@ -84,11 +86,37 @@ export default function AdminDashboard() {
   const [filter, setFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isClient, setIsClient] = useState<boolean>(false);
+  const router = useRouter();
+  const { user: adminUser, isLoading } = useAdminAuth();
 
   // Fix hydration issues
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Redirect to login if not authenticated - This happens BEFORE rendering the dashboard
+  useEffect(() => {
+    if (!isLoading && !adminUser) {
+      router.push("/login");
+    }
+  }, [adminUser, isLoading, router]);
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render dashboard if not authenticated
+  if (!adminUser) {
+    return null;
+  }
 
   const filteredMerchants = merchants.filter((merchant) => {
     const matchesSearch =

@@ -100,27 +100,9 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-[#2C3E50] mb-2">
-              Welcome Back
+              Welcome
             </h2>
             <p className="text-gray-600">Sign in with your AWS Cognito account</p>
-            {mounted && backendStatus === 'checking' && (
-              <div className="mt-2 flex items-center text-sm text-blue-600">
-                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
-                Connecting to Lambda authentication service...
-              </div>
-            )}
-            {mounted && backendStatus === 'online' && (
-              <div className="mt-2 flex items-center text-sm text-green-600">
-                <div className="h-3 w-3 rounded-full bg-green-500 mr-2"></div>
-                Lambda authentication service online
-              </div>
-            )}
-            {mounted && backendStatus === 'offline' && (
-              <div className="mt-2 flex items-center text-sm text-red-600">
-                <div className="h-3 w-3 rounded-full bg-red-500 mr-2"></div>
-                Lambda authentication service unavailable
-              </div>
-            )}
           </div>
 
           {mounted && error && (
@@ -128,25 +110,6 @@ export default function LoginPage() {
               {error}
             </div>
           )}
-
-          {/* Info about AWS Cognito */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-blue-800">
-                  Secure Authentication
-                </h3>
-                <div className="mt-2 text-sm text-blue-700">
-                  <p>Click "Sign In with AWS Cognito" to authenticate securely using AWS Cognito User Pool via Lambda functions.</p>
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* AWS Cognito Sign In Button */}
           <button
@@ -173,7 +136,7 @@ export default function LoginPage() {
           <div className="mt-6 text-center space-y-2">
             <div className="text-gray-600 text-sm">
               Secure authentication powered by{" "}
-              <span className="text-[#FF9900] font-medium">AWS Cognito & Lambda</span>
+              <span className="text-[#FF9900] font-medium">AWS Cognito</span>
             </div>
             <div className="text-xs text-gray-500">
               Your credentials are managed securely by Amazon Web Services

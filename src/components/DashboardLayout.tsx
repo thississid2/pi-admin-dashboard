@@ -28,16 +28,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const { user: adminUser, isLoading } = useAdminAuth(); // Using Lambda-based admin auth
 
-  // Redirect to login if not authenticated (no admin user found)
-  useEffect(() => {
-    console.log('🏠 DashboardLayout auth check:', { isLoading, hasAdminUser: !!adminUser, adminUser });
-    if (!isLoading && !adminUser) {
-      console.log('❌ DashboardLayout: No admin user found, redirecting to login');
-      router.push("/login");
-    } else if (!isLoading && adminUser) {
-      console.log('✅ DashboardLayout: Admin user authenticated, staying on dashboard');
-    }
-  }, [adminUser, isLoading, router]);
+  // Note: Authentication redirect is now handled in the main page.tsx component
 
   useEffect(() => {
     // Close user menu when clicking outside
@@ -105,7 +96,8 @@ export default function DashboardLayout({
     return "Admin"; // Fallback
   };
 
-  // Show loading state while checking authentication
+  // Show loading state while checking authentication - handled in main page
+  // This component assumes user is already authenticated
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
